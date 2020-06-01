@@ -1,0 +1,506 @@
+{
+  "fileToGenerate": ["some_parameter.proto", "helloworld.proto"],
+  "compilerVersion": {
+    "major": 3,
+    "minor": 9,
+    "patch": 1,
+    "suffix": ""
+  },
+  "protoFile": [{
+    "name": "some_parameter.proto",
+    "package": "my.someparameters",
+    "messageType": [{
+      "name": "SomeParameter",
+      "field": [{
+        "name": "id",
+        "number": 1,
+        "label": "LABEL_OPTIONAL",
+        "type": "TYPE_STRING",
+        "jsonName": "id"
+      }]
+    }],
+    "sourceCodeInfo": {
+      "location": [{
+        "span": [0, 0, 8, 1]
+      }, {
+        "path": [12],
+        "span": [0, 0, 18]
+      }, {
+        "path": [2],
+        "span": [4, 0, 26],
+        "leadingDetachedComments": ["option java_outer_classname \u003d \"SomeParameterProto\";\n"]
+      }, {
+        "path": [4, 0],
+        "span": [6, 0, 8, 1]
+      }, {
+        "path": [4, 0, 1],
+        "span": [6, 8, 21]
+      }, {
+        "path": [4, 0, 2, 0],
+        "span": [7, 4, 18]
+      }, {
+        "path": [4, 0, 2, 0, 4],
+        "span": [7, 4, 6, 23]
+      }, {
+        "path": [4, 0, 2, 0, 5],
+        "span": [7, 4, 10]
+      }, {
+        "path": [4, 0, 2, 0, 1],
+        "span": [7, 11, 13]
+      }, {
+        "path": [4, 0, 2, 0, 3],
+        "span": [7, 16, 17]
+      }]
+    },
+    "syntax": "proto3"
+  }, {
+    "name": "google/protobuf/empty.proto",
+    "package": "google.protobuf",
+    "messageType": [{
+      "name": "Empty"
+    }],
+    "options": {
+      "javaPackage": "com.google.protobuf",
+      "javaOuterClassname": "EmptyProto",
+      "javaMultipleFiles": true,
+      "goPackage": "github.com/golang/protobuf/ptypes/empty",
+      "ccEnableArenas": true,
+      "objcClassPrefix": "GPB",
+      "csharpNamespace": "Google.Protobuf.WellKnownTypes"
+    },
+    "sourceCodeInfo": {
+      "location": [{
+        "span": [30, 0, 51, 16]
+      }, {
+        "path": [12],
+        "span": [30, 0, 18],
+        "leadingDetachedComments": [" Protocol Buffers - Google\u0027s data interchange format\n Copyright 2008 Google Inc.  All rights reserved.\n https://developers.google.com/protocol-buffers/\n\n Redistribution and use in source and binary forms, with or without\n modification, are permitted provided that the following conditions are\n met:\n\n     * Redistributions of source code must retain the above copyright\n notice, this list of conditions and the following disclaimer.\n     * Redistributions in binary form must reproduce the above\n copyright notice, this list of conditions and the following disclaimer\n in the documentation and/or other materials provided with the\n distribution.\n     * Neither the name of Google Inc. nor the names of its\n contributors may be used to endorse or promote products derived from\n this software without specific prior written permission.\n\n THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS\n \"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT\n LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR\n A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT\n OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,\n SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT\n LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,\n DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY\n THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT\n (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\n OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"]
+      }, {
+        "path": [2],
+        "span": [32, 0, 24]
+      }, {
+        "path": [8],
+        "span": [34, 0, 59]
+      }, {
+        "path": [8, 37],
+        "span": [34, 0, 59]
+      }, {
+        "path": [8],
+        "span": [35, 0, 62]
+      }, {
+        "path": [8, 11],
+        "span": [35, 0, 62]
+      }, {
+        "path": [8],
+        "span": [36, 0, 44]
+      }, {
+        "path": [8, 1],
+        "span": [36, 0, 44]
+      }, {
+        "path": [8],
+        "span": [37, 0, 43]
+      }, {
+        "path": [8, 8],
+        "span": [37, 0, 43]
+      }, {
+        "path": [8],
+        "span": [38, 0, 34]
+      }, {
+        "path": [8, 10],
+        "span": [38, 0, 34]
+      }, {
+        "path": [8],
+        "span": [39, 0, 33]
+      }, {
+        "path": [8, 36],
+        "span": [39, 0, 33]
+      }, {
+        "path": [8],
+        "span": [40, 0, 31]
+      }, {
+        "path": [8, 31],
+        "span": [40, 0, 31]
+      }, {
+        "path": [4, 0],
+        "span": [51, 0, 16],
+        "leadingComments": " A generic empty message that you can re-use to avoid defining duplicated\n empty messages in your APIs. A typical example is to use it as the request\n or the response type of an API method. For instance:\n\n     service Foo {\n       rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty);\n     }\n\n The JSON representation for `Empty` is empty JSON object `{}`.\n"
+      }, {
+        "path": [4, 0, 1],
+        "span": [51, 8, 13]
+      }]
+    },
+    "syntax": "proto3"
+  }, {
+    "name": "google/protobuf/timestamp.proto",
+    "package": "google.protobuf",
+    "messageType": [{
+      "name": "Timestamp",
+      "field": [{
+        "name": "seconds",
+        "number": 1,
+        "label": "LABEL_OPTIONAL",
+        "type": "TYPE_INT64",
+        "jsonName": "seconds"
+      }, {
+        "name": "nanos",
+        "number": 2,
+        "label": "LABEL_OPTIONAL",
+        "type": "TYPE_INT32",
+        "jsonName": "nanos"
+      }]
+    }],
+    "options": {
+      "javaPackage": "com.google.protobuf",
+      "javaOuterClassname": "TimestampProto",
+      "javaMultipleFiles": true,
+      "goPackage": "github.com/golang/protobuf/ptypes/timestamp",
+      "ccEnableArenas": true,
+      "objcClassPrefix": "GPB",
+      "csharpNamespace": "Google.Protobuf.WellKnownTypes"
+    },
+    "sourceCodeInfo": {
+      "location": [{
+        "span": [30, 0, 137, 1]
+      }, {
+        "path": [12],
+        "span": [30, 0, 18],
+        "leadingDetachedComments": [" Protocol Buffers - Google\u0027s data interchange format\n Copyright 2008 Google Inc.  All rights reserved.\n https://developers.google.com/protocol-buffers/\n\n Redistribution and use in source and binary forms, with or without\n modification, are permitted provided that the following conditions are\n met:\n\n     * Redistributions of source code must retain the above copyright\n notice, this list of conditions and the following disclaimer.\n     * Redistributions in binary form must reproduce the above\n copyright notice, this list of conditions and the following disclaimer\n in the documentation and/or other materials provided with the\n distribution.\n     * Neither the name of Google Inc. nor the names of its\n contributors may be used to endorse or promote products derived from\n this software without specific prior written permission.\n\n THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS\n \"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT\n LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR\n A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT\n OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,\n SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT\n LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,\n DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY\n THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT\n (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\n OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"]
+      }, {
+        "path": [2],
+        "span": [32, 0, 24]
+      }, {
+        "path": [8],
+        "span": [34, 0, 59]
+      }, {
+        "path": [8, 37],
+        "span": [34, 0, 59]
+      }, {
+        "path": [8],
+        "span": [35, 0, 31]
+      }, {
+        "path": [8, 31],
+        "span": [35, 0, 31]
+      }, {
+        "path": [8],
+        "span": [36, 0, 66]
+      }, {
+        "path": [8, 11],
+        "span": [36, 0, 66]
+      }, {
+        "path": [8],
+        "span": [37, 0, 44]
+      }, {
+        "path": [8, 1],
+        "span": [37, 0, 44]
+      }, {
+        "path": [8],
+        "span": [38, 0, 47]
+      }, {
+        "path": [8, 8],
+        "span": [38, 0, 47]
+      }, {
+        "path": [8],
+        "span": [39, 0, 34]
+      }, {
+        "path": [8, 10],
+        "span": [39, 0, 34]
+      }, {
+        "path": [8],
+        "span": [40, 0, 33]
+      }, {
+        "path": [8, 36],
+        "span": [40, 0, 33]
+      }, {
+        "path": [4, 0],
+        "span": [126, 0, 137, 1],
+        "leadingComments": " A Timestamp represents a point in time independent of any time zone or local\n calendar, encoded as a count of seconds and fractions of seconds at\n nanosecond resolution. The count is relative to an epoch at UTC midnight on\n January 1, 1970, in the proleptic Gregorian calendar which extends the\n Gregorian calendar backwards to year one.\n\n All minutes are 60 seconds long. Leap seconds are \"smeared\" so that no leap\n second table is needed for interpretation, using a [24-hour linear\n smear](https://developers.google.com/time/smear).\n\n The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By\n restricting to that range, we ensure that we can convert to and from [RFC\n 3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.\n\n # Examples\n\n Example 1: Compute Timestamp from POSIX `time()`.\n\n     Timestamp timestamp;\n     timestamp.set_seconds(time(NULL));\n     timestamp.set_nanos(0);\n\n Example 2: Compute Timestamp from POSIX `gettimeofday()`.\n\n     struct timeval tv;\n     gettimeofday(\u0026tv, NULL);\n\n     Timestamp timestamp;\n     timestamp.set_seconds(tv.tv_sec);\n     timestamp.set_nanos(tv.tv_usec * 1000);\n\n Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.\n\n     FILETIME ft;\n     GetSystemTimeAsFileTime(\u0026ft);\n     UINT64 ticks \u003d (((UINT64)ft.dwHighDateTime) \u003c\u003c 32) | ft.dwLowDateTime;\n\n     // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z\n     // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.\n     Timestamp timestamp;\n     timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));\n     timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));\n\n Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.\n\n     long millis \u003d System.currentTimeMillis();\n\n     Timestamp timestamp \u003d Timestamp.newBuilder().setSeconds(millis / 1000)\n         .setNanos((int) ((millis % 1000) * 1000000)).build();\n\n\n Example 5: Compute Timestamp from current time in Python.\n\n     timestamp \u003d Timestamp()\n     timestamp.GetCurrentTime()\n\n # JSON Mapping\n\n In JSON format, the Timestamp type is encoded as a string in the\n [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the\n format is \"{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z\"\n where {year} is always expressed using four digits while {month}, {day},\n {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional\n seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),\n are optional. The \"Z\" suffix indicates the timezone (\"UTC\"); the timezone\n is required. A proto3 JSON serializer should always use UTC (as indicated by\n \"Z\") when printing the Timestamp type and a proto3 JSON parser should be\n able to accept both UTC and other timezones (as indicated by an offset).\n\n For example, \"2017-01-15T01:30:15.01Z\" encodes 15.01 seconds past\n 01:30 UTC on January 15, 2017.\n\n In JavaScript, one can convert a Date object to this format using the\n standard\n [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)\n method. In Python, a standard `datetime.datetime` object can be converted\n to this format using\n [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with\n the time format spec \u0027%Y-%m-%dT%H:%M:%S.%fZ\u0027. Likewise, in Java, one can use\n the Joda Time\u0027s [`ISODateTimeFormat.dateTime()`](\n http://www.joda.org/joda-time/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime%2D%2D\n ) to obtain a formatter capable of generating timestamps in this format.\n\n\n"
+      }, {
+        "path": [4, 0, 1],
+        "span": [126, 8, 17]
+      }, {
+        "path": [4, 0, 2, 0],
+        "span": [130, 2, 20],
+        "leadingComments": " Represents seconds of UTC time since Unix epoch\n 1970-01-01T00:00:00Z. Must be from 0001-01-01T00:00:00Z to\n 9999-12-31T23:59:59Z inclusive.\n"
+      }, {
+        "path": [4, 0, 2, 0, 4],
+        "span": [130, 2, 126, 19]
+      }, {
+        "path": [4, 0, 2, 0, 5],
+        "span": [130, 2, 7]
+      }, {
+        "path": [4, 0, 2, 0, 1],
+        "span": [130, 8, 15]
+      }, {
+        "path": [4, 0, 2, 0, 3],
+        "span": [130, 18, 19]
+      }, {
+        "path": [4, 0, 2, 1],
+        "span": [136, 2, 18],
+        "leadingComments": " Non-negative fractions of a second at nanosecond resolution. Negative\n second values with fractions must still have non-negative nanos values\n that count forward in time. Must be from 0 to 999,999,999\n inclusive.\n"
+      }, {
+        "path": [4, 0, 2, 1, 4],
+        "span": [136, 2, 130, 20]
+      }, {
+        "path": [4, 0, 2, 1, 5],
+        "span": [136, 2, 7]
+      }, {
+        "path": [4, 0, 2, 1, 1],
+        "span": [136, 8, 13]
+      }, {
+        "path": [4, 0, 2, 1, 3],
+        "span": [136, 16, 17]
+      }]
+    },
+    "syntax": "proto3"
+  }, {
+    "name": "helloworld.proto",
+    "package": "helloworld",
+    "dependency": ["google/protobuf/empty.proto", "google/protobuf/timestamp.proto", "some_parameter.proto"],
+    "messageType": [{
+      "name": "HelloRequest",
+      "field": [{
+        "name": "name",
+        "number": 1,
+        "label": "LABEL_OPTIONAL",
+        "type": "TYPE_STRING",
+        "jsonName": "name"
+      }, {
+        "name": "sp",
+        "number": 2,
+        "label": "LABEL_OPTIONAL",
+        "type": "TYPE_MESSAGE",
+        "typeName": ".my.someparameters.SomeParameter",
+        "jsonName": "sp"
+      }]
+    }, {
+      "name": "HelloResponse",
+      "field": [{
+        "name": "message",
+        "number": 1,
+        "label": "LABEL_OPTIONAL",
+        "type": "TYPE_STRING",
+        "jsonName": "message"
+      }]
+    }, {
+      "name": "TimeResponse",
+      "field": [{
+        "name": "time",
+        "number": 1,
+        "label": "LABEL_OPTIONAL",
+        "type": "TYPE_MESSAGE",
+        "typeName": ".google.protobuf.Timestamp",
+        "jsonName": "time"
+      }]
+    }],
+    "service": [{
+      "name": "Greeter",
+      "method": [{
+        "name": "SayHello",
+        "inputType": ".helloworld.HelloRequest",
+        "outputType": ".helloworld.HelloResponse",
+        "options": {
+        }
+      }, {
+        "name": "SayTime",
+        "inputType": ".google.protobuf.Empty",
+        "outputType": ".helloworld.TimeResponse",
+        "options": {
+          "deprecated": true
+        }
+      }, {
+        "name": "SomeParam",
+        "inputType": ".my.someparameters.SomeParameter",
+        "outputType": ".my.someparameters.SomeParameter",
+        "options": {
+        }
+      }, {
+        "name": "FireAndForget",
+        "inputType": ".my.someparameters.SomeParameter",
+        "outputType": ".google.protobuf.Empty",
+        "options": {
+        }
+      }]
+    }],
+    "options": {
+      "javaPackage": "com.salesforce.jprotoc",
+      "javaOuterClassname": "HelloWorldProto"
+    },
+    "sourceCodeInfo": {
+      "location": [{
+        "span": [0, 0, 38, 1]
+      }, {
+        "path": [12],
+        "span": [0, 0, 18]
+      }, {
+        "path": [2],
+        "span": [2, 0, 19]
+      }, {
+        "path": [3, 0],
+        "span": [4, 0, 37]
+      }, {
+        "path": [3, 1],
+        "span": [5, 0, 41]
+      }, {
+        "path": [3, 2],
+        "span": [6, 0, 30]
+      }, {
+        "path": [8],
+        "span": [8, 0, 47]
+      }, {
+        "path": [8, 1],
+        "span": [8, 0, 47]
+      }, {
+        "path": [8],
+        "span": [9, 0, 48]
+      }, {
+        "path": [8, 8],
+        "span": [9, 0, 48]
+      }, {
+        "path": [6, 0],
+        "span": [12, 0, 22, 1],
+        "leadingComments": " The greeting service definition.\n"
+      }, {
+        "path": [6, 0, 1],
+        "span": [12, 8, 15]
+      }, {
+        "path": [6, 0, 2, 0],
+        "span": [14, 4, 58],
+        "leadingComments": " Sends a greeting\n"
+      }, {
+        "path": [6, 0, 2, 0, 1],
+        "span": [14, 8, 16]
+      }, {
+        "path": [6, 0, 2, 0, 2],
+        "span": [14, 18, 30]
+      }, {
+        "path": [6, 0, 2, 0, 3],
+        "span": [14, 41, 54]
+      }, {
+        "path": [6, 0, 2, 1],
+        "span": [17, 4, 88],
+        "leadingComments": " Sends the current time\n"
+      }, {
+        "path": [6, 0, 2, 1, 1],
+        "span": [17, 8, 15]
+      }, {
+        "path": [6, 0, 2, 1, 2],
+        "span": [17, 17, 38]
+      }, {
+        "path": [6, 0, 2, 1, 3],
+        "span": [17, 49, 61]
+      }, {
+        "path": [6, 0, 2, 1, 4],
+        "span": [17, 64, 87]
+      }, {
+        "path": [6, 0, 2, 1, 4, 33],
+        "span": [17, 64, 87]
+      }, {
+        "path": [6, 0, 2, 2],
+        "span": [19, 4, 96]
+      }, {
+        "path": [6, 0, 2, 2, 1],
+        "span": [19, 8, 17]
+      }, {
+        "path": [6, 0, 2, 2, 2],
+        "span": [19, 19, 50]
+      }, {
+        "path": [6, 0, 2, 2, 3],
+        "span": [19, 61, 92]
+      }, {
+        "path": [6, 0, 2, 3],
+        "span": [21, 4, 90]
+      }, {
+        "path": [6, 0, 2, 3, 1],
+        "span": [21, 8, 21]
+      }, {
+        "path": [6, 0, 2, 3, 2],
+        "span": [21, 23, 54]
+      }, {
+        "path": [6, 0, 2, 3, 3],
+        "span": [21, 65, 86]
+      }, {
+        "path": [4, 0],
+        "span": [25, 0, 28, 1],
+        "leadingComments": " The request message containing the user\u0027s name.\n"
+      }, {
+        "path": [4, 0, 1],
+        "span": [25, 8, 20]
+      }, {
+        "path": [4, 0, 2, 0],
+        "span": [26, 4, 20]
+      }, {
+        "path": [4, 0, 2, 0, 4],
+        "span": [26, 4, 25, 22]
+      }, {
+        "path": [4, 0, 2, 0, 5],
+        "span": [26, 4, 10]
+      }, {
+        "path": [4, 0, 2, 0, 1],
+        "span": [26, 11, 15]
+      }, {
+        "path": [4, 0, 2, 0, 3],
+        "span": [26, 18, 19]
+      }, {
+        "path": [4, 0, 2, 1],
+        "span": [27, 4, 43]
+      }, {
+        "path": [4, 0, 2, 1, 4],
+        "span": [27, 4, 26, 20]
+      }, {
+        "path": [4, 0, 2, 1, 6],
+        "span": [27, 4, 35]
+      }, {
+        "path": [4, 0, 2, 1, 1],
+        "span": [27, 36, 38]
+      }, {
+        "path": [4, 0, 2, 1, 3],
+        "span": [27, 41, 42]
+      }, {
+        "path": [4, 1],
+        "span": [31, 0, 33, 1],
+        "leadingComments": " The response message containing the greetings\n"
+      }, {
+        "path": [4, 1, 1],
+        "span": [31, 8, 21]
+      }, {
+        "path": [4, 1, 2, 0],
+        "span": [32, 4, 23]
+      }, {
+        "path": [4, 1, 2, 0, 4],
+        "span": [32, 4, 31, 23]
+      }, {
+        "path": [4, 1, 2, 0, 5],
+        "span": [32, 4, 10]
+      }, {
+        "path": [4, 1, 2, 0, 1],
+        "span": [32, 11, 18]
+      }, {
+        "path": [4, 1, 2, 0, 3],
+        "span": [32, 21, 22]
+      }, {
+        "path": [4, 2],
+        "span": [36, 0, 38, 1],
+        "leadingComments": " The response message containing the time\n"
+      }, {
+        "path": [4, 2, 1],
+        "span": [36, 8, 20]
+      }, {
+        "path": [4, 2, 2, 0],
+        "span": [37, 4, 39]
+      }, {
+        "path": [4, 2, 2, 0, 4],
+        "span": [37, 4, 36, 22]
+      }, {
+        "path": [4, 2, 2, 0, 6],
+        "span": [37, 4, 29]
+      }, {
+        "path": [4, 2, 2, 0, 1],
+        "span": [37, 30, 34]
+      }, {
+        "path": [4, 2, 2, 0, 3],
+        "span": [37, 37, 38]
+      }]
+    },
+    "syntax": "proto3"
+  }]
+}

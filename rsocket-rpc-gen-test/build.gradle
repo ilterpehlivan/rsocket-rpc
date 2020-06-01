@@ -1,0 +1,69 @@
+plugins {
+    id 'java'
+    id 'com.google.protobuf'
+}
+
+group 'io.rsocket.rpc'
+version '0.3.0'
+
+sourceCompatibility = 1.8
+
+protobuf {
+//    protoc {
+//        artifact = 'com.google.protobuf:protoc:3.6.1'
+//    }
+    plugins {
+        grpc {
+            artifact = "io.grpc:protoc-gen-grpc-java:1.24.0"
+        }
+        reactive {
+            path = "${project.rootProject.projectDir}/rsocket-rpc-gen/generated/rsocket-rpc-gen"
+        }
+    }
+    generateProtoTasks {
+        all().each { task ->
+//            task.builtins {
+//                java {}
+//            }
+            task.plugins {
+                grpc {}
+                reactive {}
+            }
+        }
+    }
+}
+
+clean {
+    delete protobuf.generatedFilesBaseDir
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile project(':rsocket-rpc-core-extension')
+    compile 'io.rsocket:rsocket-transport-netty'
+    compile "io.rsocket:rsocket-load-balancer"
+    implementation 'com.google.protobuf:protobuf-java'
+    implementation 'com.google.protobuf:protoc'
+    compile 'com.salesforce.servicelibs:jprotoc:1.0.1'
+    compile 'com.salesforce.servicelibs:rxgrpc-stub'
+    compile 'io.projectreactor:reactor-core'
+    compile "io.zipkin.brave:brave:5.10.2"
+//    compile "io.zipkin.brave:brave-context-log4j12:5.10.2"
+    compile "io.zipkin.brave:brave-context-slf4j:5.10.2"
+    compile "io.zipkin.brave:brave-instrumentation-rpc:5.10.2"
+//    compile "org.apache.logging.log4j:log4j-api:2.7"
+//    compile "org.apache.logging.log4j:log4j-core:2.7"
+    compile "ch.qos.logback:logback-classic:1.2.3"
+    compile "org.apache.logging.log4j:log4j-to-slf4j:2.13.0"
+    compile "log4j:log4j:1.2.17"
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
+
+configurations.all {
+    exclude group: 'org.slf4j', module: 'slf4j-simple'
+}
+
+task allDeps(type: DependencyReportTask) {}

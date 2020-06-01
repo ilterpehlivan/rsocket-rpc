@@ -1,0 +1,49 @@
+plugins {
+    id 'com.google.protobuf'
+    id 'java'
+}
+
+description = 'RSocket RPC Protobf IDL'
+
+//protobuf {
+//    generateProtoTasks {
+//        all().each { task ->
+//            task.enabled = true
+//
+//            task.builtins {
+//                // Generates C++ code in the output folder:
+//                cpp { }
+//
+//                // Avoid generating Java files:
+//                remove java
+//            }
+//        }
+//    }
+//}
+dependencies {
+    compile 'com.google.protobuf:protobuf-java:3.11.1'
+}
+protobuf {
+    protoc {
+        artifact = 'com.google.protobuf:protoc:3.11.1'
+    }
+    generateProtoTasks {
+        all().each { task ->
+            task.builtins {
+//                remove java
+                cpp {
+                }
+            }
+        }
+    }
+}
+
+sourceSets {
+    main {
+        proto { srcDir 'src/main/proto/rsocket' }
+    }
+
+    test {
+        proto { srcDir 'src/test/proto' }
+    }
+}

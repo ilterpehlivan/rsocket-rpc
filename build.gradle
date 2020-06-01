@@ -1,0 +1,44 @@
+plugins {
+    id 'com.google.osdetector' version '1.4.0'
+    id 'com.jfrog.artifactory' version '4.12.0' apply false
+    id 'com.jfrog.bintray' version '1.8.4' apply false
+    id 'me.champeau.gradle.jmh' version '0.5.0' apply false
+    id 'io.morethan.jmhreport' version '0.9.0' apply false
+    id 'com.google.protobuf' version '0.8.10' apply false
+    id 'io.spring.dependency-management' version '1.0.8.RELEASE' apply false
+}
+
+//apply from: 'artifactory.gradle'
+//apply from: 'bintray.gradle'
+//apply from: 'publication.gradle'
+
+subprojects {
+    apply plugin: 'idea'
+    apply plugin: 'java'
+    apply plugin: 'java-library'
+
+    apply plugin: 'maven-publish'
+
+    apply plugin: 'com.jfrog.artifactory'
+    apply plugin: 'com.jfrog.bintray'
+
+    apply from: "${project.rootDir}/dependencies-managment.gradle"
+
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+
+    ext {
+        if (project.hasProperty('versionSuffix')) {
+            project.version += project.getProperty('versionSuffix')
+        }
+    }
+
+    repositories {
+        mavenLocal()
+        jcenter()
+        mavenCentral()
+        maven { url "https://repo.spring.io/snapshot" }
+        maven { url "https://repo.spring.io/milestone" }
+    }
+
+}

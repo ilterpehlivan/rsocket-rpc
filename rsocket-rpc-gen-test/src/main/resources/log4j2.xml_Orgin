@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="DEBUG">
+  <Appenders>
+    <Console name="stdout" target="SYSTEM_OUT">
+      <!-- MDC and NDC -->
+      <PatternLayout
+        pattern="%d{ABSOLUTE} [%X{traceId}/%X{spanId}] %-5p [%t] %C{2} (%F:%L) - %m%n" />
+      <!-- MDC Only -->
+      <!-- <PatternLayout
+        pattern="%-4r [%t] %5p %c{1} - %m - tx.id=%X{transaction.id} tx.owner=%X{transaction.owner}%n" />  -->
+      <!-- NDC Only -->
+      <!-- <PatternLayout
+        pattern="%-4r [%t] %5p %c{1} - %m - %x%n" />  -->
+    </Console>
+  </Appenders>
+
+  <Loggers>
+    <Logger name="io.rsocket.rpc.core.extension" level="TRACE" >
+      <AppenderRef ref="stdout"/>
+    </Logger>
+
+    <AsyncRoot level="DEBUG">
+      <AppenderRef ref="stdout" />
+    </AsyncRoot>
+  </Loggers>
+</Configuration>

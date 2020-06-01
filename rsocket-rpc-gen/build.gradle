@@ -1,0 +1,86 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '2.2.5.RELEASE'
+    id 'maven-publish'
+    id 'com.jfrog.bintray'
+}
+
+sourceCompatibility = 1.8
+
+def preScriptPath = "$projectDir/exec/generate-plugin.sh $projectDir"
+
+bootJar {
+    classifier = 'jdk8'
+    // Make jar fully executable by prepending a shell script that knows how to launch the application.
+    launchScript()
+}
+
+
+
+build {
+    doLast{
+        println "completed the build.generating the executable - $preScriptPath"
+        def result = "$preScriptPath".execute()
+        result.waitForProcessOutput(System.out, System.err)
+        println "completed the script $result"
+    }
+}
+
+
+dependencies {
+    compile project(':rsocket-rpc-protobuf-idl')
+    compile "io.rsocket.rpc:rsocket-rpc-core"
+    compile 'com.salesforce.servicelibs:jprotoc:1.0.1'
+    compile 'com.google.protobuf:protobuf-java'
+    compile 'io.rsocket:rsocket-transport-netty'
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
+
+clean {
+    println "Deleting the generated folder - ${projectDir}/generated"
+    delete "${projectDir}/generated"
+}
+
+// single module gradle project
+publishing {
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/ilterpehlivan/rsocket-rpc")
+            credentials {
+                username = project.findProperty("gpr.user") ?: System.getenv("GPR_USER")
+                password = project.findProperty("gpr.publish.key") ?: System.getenv("GPR_API_KEY")
+            }
+        }
+    }
+    publications {
+        maven(MavenPublication) {
+            artifact("${projectDir}/generated/rsocket-rpc-gen") {
+                classifier 'Java_executable'
+            }
+
+            pom {
+                name = "rsocket-rpc-java-gen"
+                description = "Alternative rsocket-rpc Java generator by using Mustache and Jprotoc"
+                url = "https://github.com/ilterpehlivan/rsocket-rpc"
+                licenses {
+                    license {
+                        name = "The Apache License, Version 2.0"
+                        url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+                    }
+                }
+                developers {
+                    developer {
+                        id = "ilterpehlivan"
+                        name = "Ilter Pehlivan"
+                    }
+                }
+                scm {
+                    connection = "scm:git:https://github.com/ilterpehlivan/rsocket-rpc.git"
+                    developerConnection = "scm:git:https://github.com/ilterpehlivan/rsocket-rpc.git"
+                    url = "scm:git:https://github.com/ilterpehlivan/rsocket-rpc"
+                }
+            }
+        }
+    }
+}

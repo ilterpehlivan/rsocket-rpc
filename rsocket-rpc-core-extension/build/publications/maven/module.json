@@ -1,0 +1,233 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "com.github.ilterpehlivan",
+    "module": "rsocket-rpc-core-extension",
+    "version": "0.1.0",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "6.1",
+      "buildId": "wxzkx5egj5cybfy574r5kmt2mq"
+    }
+  },
+  "variants": [
+    {
+      "name": "apiElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 8,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-api"
+      },
+      "dependencies": [
+        {
+          "group": "com.github.ilterpehlivan",
+          "module": "rsocket-rpc-protobuf-idl",
+          "version": {
+            "requires": "0.1.0"
+          }
+        },
+        {
+          "group": "com.google.protobuf",
+          "module": "protobuf-java",
+          "version": {
+            "requires": "3.11.1"
+          }
+        },
+        {
+          "group": "io.rsocket.rpc",
+          "module": "rsocket-rpc-core",
+          "version": {
+            "requires": "0.2.19"
+          }
+        },
+        {
+          "group": "io.rsocket",
+          "module": "rsocket-transport-netty",
+          "version": {
+            "requires": "1.0.0-RC6"
+          }
+        },
+        {
+          "group": "io.rsocket",
+          "module": "rsocket-micrometer",
+          "version": {
+            "requires": "1.0.0-RC6"
+          }
+        },
+        {
+          "group": "io.rsocket",
+          "module": "rsocket-load-balancer",
+          "version": {
+            "requires": "1.0.0-RC6"
+          }
+        },
+        {
+          "group": "io.zipkin.brave",
+          "module": "brave",
+          "version": {
+            "requires": "5.10.2"
+          }
+        },
+        {
+          "group": "io.zipkin.brave",
+          "module": "brave-instrumentation-rpc",
+          "version": {
+            "requires": "5.10.2"
+          }
+        },
+        {
+          "group": "com.salesforce.servicelibs",
+          "module": "rxgrpc-stub",
+          "version": {
+            "requires": "1.0.0"
+          }
+        },
+        {
+          "group": "com.salesforce.servicelibs",
+          "module": "reactor-grpc-stub",
+          "version": {
+            "requires": "1.0.0"
+          }
+        },
+        {
+          "group": "io.grpc",
+          "module": "grpc-protobuf",
+          "version": {
+            "requires": "1.19.0"
+          }
+        },
+        {
+          "group": "org.slf4j",
+          "module": "slf4j-simple",
+          "version": {
+            "requires": "1.7.29"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "rsocket-rpc-core-extension-0.1.0.jar",
+          "url": "rsocket-rpc-core-extension-0.1.0.jar",
+          "size": 98531,
+          "sha512": "471fd236b9b68f54c08b4482d0babffed6dabf57d254f524dcd2315c29b13e27cfc1f074ef62c57376a1262d2c45cd0492101a375680031693f0bebc9938aa8a",
+          "sha256": "6c1794889fb5f2d82c64ba8e35953c2626b92a5beb846c6e1954e26171bacb88",
+          "sha1": "167e1c34b06e41f85226ce90ec6100e1e906281f",
+          "md5": "e60d14ca481715a7dbb3d5bc638f563f"
+        }
+      ]
+    },
+    {
+      "name": "runtimeElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 8,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime"
+      },
+      "dependencies": [
+        {
+          "group": "com.github.ilterpehlivan",
+          "module": "rsocket-rpc-protobuf-idl",
+          "version": {
+            "requires": "0.1.0"
+          }
+        },
+        {
+          "group": "com.google.protobuf",
+          "module": "protobuf-java",
+          "version": {
+            "requires": "3.11.1"
+          }
+        },
+        {
+          "group": "io.rsocket.rpc",
+          "module": "rsocket-rpc-core",
+          "version": {
+            "requires": "0.2.19"
+          }
+        },
+        {
+          "group": "io.rsocket",
+          "module": "rsocket-transport-netty",
+          "version": {
+            "requires": "1.0.0-RC6"
+          }
+        },
+        {
+          "group": "io.rsocket",
+          "module": "rsocket-micrometer",
+          "version": {
+            "requires": "1.0.0-RC6"
+          }
+        },
+        {
+          "group": "io.rsocket",
+          "module": "rsocket-load-balancer",
+          "version": {
+            "requires": "1.0.0-RC6"
+          }
+        },
+        {
+          "group": "io.zipkin.brave",
+          "module": "brave",
+          "version": {
+            "requires": "5.10.2"
+          }
+        },
+        {
+          "group": "io.zipkin.brave",
+          "module": "brave-instrumentation-rpc",
+          "version": {
+            "requires": "5.10.2"
+          }
+        },
+        {
+          "group": "com.salesforce.servicelibs",
+          "module": "rxgrpc-stub",
+          "version": {
+            "requires": "1.0.0"
+          }
+        },
+        {
+          "group": "com.salesforce.servicelibs",
+          "module": "reactor-grpc-stub",
+          "version": {
+            "requires": "1.0.0"
+          }
+        },
+        {
+          "group": "io.grpc",
+          "module": "grpc-protobuf",
+          "version": {
+            "requires": "1.19.0"
+          }
+        },
+        {
+          "group": "org.slf4j",
+          "module": "slf4j-simple",
+          "version": {
+            "requires": "1.7.29"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "rsocket-rpc-core-extension-0.1.0.jar",
+          "url": "rsocket-rpc-core-extension-0.1.0.jar",
+          "size": 98531,
+          "sha512": "471fd236b9b68f54c08b4482d0babffed6dabf57d254f524dcd2315c29b13e27cfc1f074ef62c57376a1262d2c45cd0492101a375680031693f0bebc9938aa8a",
+          "sha256": "6c1794889fb5f2d82c64ba8e35953c2626b92a5beb846c6e1954e26171bacb88",
+          "sha1": "167e1c34b06e41f85226ce90ec6100e1e906281f",
+          "md5": "e60d14ca481715a7dbb3d5bc638f563f"
+        }
+      ]
+    }
+  ]
+}
