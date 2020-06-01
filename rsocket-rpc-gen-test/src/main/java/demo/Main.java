@@ -24,8 +24,9 @@ public class Main {
 
   public static void main(String[] args) throws InterruptedException {
     logger.info("starting the sample app");
-    //callRequestResponseWithTracing();
-    callRequestResponseWithMetrics();
+    callRequestResponseWithTracing();
+   // callRequestResponseWithMetrics();
+    callRequestResponseWithTracingAndMetrics();
 
     //    CountDownLatch latch = new CountDownLatch(9);
     //    rsocketGreeterStub
@@ -37,6 +38,67 @@ public class Main {
 
     //    latch.await();
     logger.info("**End of main***");
+  }
+
+  private static void callRequestResponseWithTracingAndMetrics() throws InterruptedException {
+    Tracing tracing =
+        Tracing.newBuilder()
+            .currentTraceContext(
+                ThreadLocalCurrentTraceContext.newBuilder()
+                    .addScopeDecorator(MDCScopeDecorator.create())
+                    .build())
+            .localServiceName("test-service")
+            .build();
+    Tracer tracer = tracing.tracer();
+    SimpleMeterRegistry simpleServerMeterRegistry = new SimpleMeterRegistry();
+    RpcServer server =
+        RsocketServerBuilder.forPort(9090)
+            .addService(new GreeterImpl())
+            .withMetrics(simpleServerMeterRegistry)
+            .interceptor(RSocketTracing.create(tracing).newServerInterceptor())
+            .build()
+            .start();
+
+    logger.info("Starting server in port 9090");
+    server.awaitTermination();
+
+    SimpleMeterRegistry simpleClientMeterRegistry = new SimpleMeterRegistry();
+
+    RsocketClientBuilder clientBuilder = RsocketClientBuilder.forAddress("localhost", 9090)
+        .withLoadBalancing()
+        .withMetrics(simpleClientMeterRegistry)
+        .interceptor(RSocketTracing.create(tracing).newClientInterceptor());
+
+    Span span = tracer.newTrace().name("encode2").start();
+    try (CurrentTraceContext.Scope scope =
+        tracing.currentTraceContext().maybeScope(span.context())) {
+      RsocketGreeterStub rsocketGreeterStub = RsocketGreeterRsocket.newReactorStub(clientBuilder);
+      rsocketGreeterStub
+          .greet(HelloRequest.newBuilder().setName("hello").build())
+          .doOnNext(r -> logger.info("RequestResponse:response received {}", r.getMessage()))
+          .block();
+    } finally {
+      span.finish();
+      server.shutDown();
+      printClientMetrics(simpleClientMeterRegistry);
+      printServerMetrics(simpleServerMeterRegistry);
+    }
+  }
+
+  private static void printServerMetrics(SimpleMeterRegistry simpleServerMeterRegistry) {
+    simpleServerMeterRegistry.forEachMeter(
+        meter -> {
+          logger.info("server meter id {} result {}",meter.getId(),meter.measure());
+        }
+    );
+  }
+
+  private static void printClientMetrics(SimpleMeterRegistry simpleClientMeterRegistry) {
+    simpleClientMeterRegistry.forEachMeter(
+        meter -> {
+          logger.info("client meter id {} result {}",meter.getId(),meter.measure());
+        }
+    );
   }
 
   private static void callRequestResponseWithMetrics() throws InterruptedException {

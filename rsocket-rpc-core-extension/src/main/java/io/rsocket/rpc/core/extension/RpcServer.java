@@ -3,6 +3,7 @@ package io.rsocket.rpc.core.extension;
 import io.rsocket.RSocketFactory.Start;
 import io.rsocket.rpc.core.extension.routing.RoutingServerRSocket;
 import io.rsocket.transport.netty.server.CloseableChannel;
+import java.time.Instant;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -34,7 +35,7 @@ public final class RpcServer {
     synchronized (this.lock) {
       if (!started) return;
       closeableChannel.dispose();
-      server.interrupt();
+      //server.interrupt();
     }
   }
 
@@ -51,12 +52,9 @@ public final class RpcServer {
                             log.info("server started");
                           })
                       .block(),
-              "rsocket-server");
+              "rsocket-server-"+ Instant.now().toString());
       server.start();
       while (!started) ; // wait until thread executed
-      //      while (!this.terminated) {
-      //        this.lock.wait();
-      //      }
     }
   }
 }
