@@ -32,9 +32,9 @@ public final class {{className}} {
         return new Rsocket{{serviceName}}Stub(client.getrSocketMono());
     }
 
-    public static RsocketGreeterStub newReactorStub(
+    public static Rsocket{{serviceName}}Stub newReactorStub(
         io.rsocket.rpc.core.extension.RsocketClientBuilder clientBuilder) {
-      return new RsocketGreeterStub(
+      return new Rsocket{{serviceName}}Stub(
             clientBuilder
                   .serviceName({{serviceName}}ImplBase.SERVICE)
                   .addMethods(methods)

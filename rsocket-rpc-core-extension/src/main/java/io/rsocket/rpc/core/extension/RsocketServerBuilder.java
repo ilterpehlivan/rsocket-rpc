@@ -10,7 +10,6 @@ import io.rsocket.RSocketFactory.ServerRSocketFactory;
 import io.rsocket.RSocketFactory.Start;
 import io.rsocket.frame.decoder.PayloadDecoder;
 import io.rsocket.plugins.RSocketInterceptor;
-import io.rsocket.rpc.RSocketRpcService;
 import io.rsocket.rpc.core.extension.micrometer.MicrometerRpcInterceptor;
 import io.rsocket.rpc.core.extension.micrometer.RpcTag;
 import io.rsocket.rpc.core.extension.routing.RoutingServerRSocket;
@@ -27,7 +26,6 @@ import reactor.core.publisher.Mono;
 
 public final class RsocketServerBuilder {
   int port;
-  RSocketRpcService service;
   List<RSocketInterceptor> interceptorList;
   ServiceHandlerRegistry.Builder registryBuilder = new ServiceHandlerRegistry.Builder();
   private MeterRegistry meterRegistry;
@@ -38,12 +36,6 @@ public final class RsocketServerBuilder {
 
   public static RsocketServerBuilder forPort(int port) {
     return new RsocketServerBuilder(port);
-  }
-
-  @Deprecated
-  public RsocketServerBuilder withService(RSocketRpcService service) {
-    this.service = service;
-    return this;
   }
 
   public RsocketServerBuilder addService(BindableService service) {

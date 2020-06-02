@@ -7,9 +7,7 @@ sourceCompatibility = 1.8
 
 
 dependencies {
-    compile project(':rsocket-rpc-protobuf-idl')
     compile 'com.google.protobuf:protobuf-java'
-    compile "io.rsocket.rpc:rsocket-rpc-core"
     compile "io.rsocket:rsocket-transport-netty"
     compile "io.rsocket:rsocket-micrometer"
     compile "io.rsocket:rsocket-load-balancer"
@@ -19,8 +17,6 @@ dependencies {
     compile "com.salesforce.servicelibs:reactor-grpc-stub"
     compile "io.grpc:grpc-protobuf"
     compile "org.slf4j:slf4j-simple"
-//    compileOnly "org.projectlombok:lombok:1.18.10"
-//    annotationProcessor 'org.projectlombok:lombok:1.18.10'
     testImplementation 'junit:junit'
     testImplementation 'org.mockito:mockito-core'
 }

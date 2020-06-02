@@ -7,7 +7,7 @@ plugins {
 
 sourceCompatibility = 1.8
 
-def preScriptPath = "$projectDir/exec/generate-plugin.sh $projectDir"
+def preScriptPath = "$projectDir/exec/generate-plugin.sh $projectDir $project.version"
 
 bootJar {
     classifier = 'jdk8'
@@ -22,17 +22,15 @@ build {
         println "completed the build.generating the executable - $preScriptPath"
         def result = "$preScriptPath".execute()
         result.waitForProcessOutput(System.out, System.err)
-        println "completed the script $result"
+        println "completed the script"
     }
 }
 
 
 dependencies {
     compile project(':rsocket-rpc-protobuf-idl')
-    compile "io.rsocket.rpc:rsocket-rpc-core"
     compile 'com.salesforce.servicelibs:jprotoc:1.0.1'
     compile 'com.google.protobuf:protobuf-java'
-    compile 'io.rsocket:rsocket-transport-netty'
     testCompile group: 'junit', name: 'junit', version: '4.12'
 }
 
@@ -55,8 +53,13 @@ publishing {
     }
     publications {
         maven(MavenPublication) {
-            artifact("${projectDir}/generated/rsocket-rpc-gen") {
-                classifier 'Java_executable'
+            artifact("${projectDir}/generated/rsocket-rpc-gen-$project.version-linux-x86_64.exe") {
+                classifier 'linux-x86_64'
+                extension 'exe'
+            }
+            artifact("${projectDir}/generated/rsocket-rpc-gen-$project.version-osx-x86_64.exe") {
+                classifier 'osx-x86_64'
+                extension 'exe'
             }
 
             pom {
