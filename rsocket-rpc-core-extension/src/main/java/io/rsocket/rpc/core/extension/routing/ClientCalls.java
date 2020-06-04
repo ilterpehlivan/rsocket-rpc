@@ -57,6 +57,7 @@ public final class ClientCalls {
     }
   }
 
+  // TODO:fix this
   public static <TRequest extends MessageLite, TResponse extends MessageLite>
       Mono<Empty> fireAndForget(
           Mono<RSocket> rSocketMono,
@@ -66,7 +67,19 @@ public final class ClientCalls {
           String methodName,
           final Parser<TResponse> responseParser) {
     try {
-      return requestReply(rSocketMono, message, metadata, serviceName, methodName, Empty.parser());
+      return Mono.defer(
+              (Supplier<Mono<Void>>)
+                  () -> {
+                    final ByteBuf metadataBuf =
+                        MetaDataUtil.encodeRpcComposite(serviceName, methodName, metadata);
+                    metadata.release();
+                    return rSocketMono.flatMap(
+                        rSocket ->
+                            rSocket.fireAndForget(
+                                ByteBufPayload.create(
+                                    message.toByteArray(), ByteBufUtil.getBytes(metadataBuf))));
+                  })
+          .thenReturn(Empty.getDefaultInstance());
     } catch (Throwable throwable) {
       return Mono.error(throwable);
     }

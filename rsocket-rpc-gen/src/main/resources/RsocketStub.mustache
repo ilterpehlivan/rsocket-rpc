@@ -45,7 +45,7 @@ public final class {{className}} {
     {{#javaDoc}}
     {{{javaDoc}}}
     {{/javaDoc}}
-    public static final class Rsocket{{serviceName}}Stub extends {{serviceName}}ImplBase {
+    public static final class Rsocket{{serviceName}}Stub {
 
         private final Mono<RSocket> rSocketMono;
 
@@ -90,9 +90,9 @@ public final class {{className}} {
     {{#javaDoc}}
     {{{javaDoc}}}
     {{/javaDoc}}
-    public static abstract class {{serviceName}}ImplBase implements io.grpc.BindableService {
+    public static interface {{serviceName}}ImplBase extends io.grpc.BindableService {
 
-        public static String SERVICE = "{{packageName}}.{{serviceName}}";
+        public String SERVICE = "{{packageName}}.{{serviceName}}";
 
         {{#methods}}
             {{#javaDoc}}
@@ -101,12 +101,10 @@ public final class {{className}} {
             {{#deprecated}}
         @java.lang.Deprecated
             {{/deprecated}}
-        public {{#isManyOutput}}reactor.core.publisher.Flux{{/isManyOutput}}{{^isManyOutput}}reactor.core.publisher.Mono{{/isManyOutput}}<{{outputType}}> {{methodName}}({{#isManyInput}}reactor.core.publisher.Flux<{{inputType}}>{{/isManyInput}}{{^isManyInput}}{{inputType}}{{/isManyInput}} request,io.netty.buffer.ByteBuf metadata) {
-            throw new io.grpc.StatusRuntimeException(io.grpc.Status.UNIMPLEMENTED);
-        }
-
+        public {{#isManyOutput}}reactor.core.publisher.Flux{{/isManyOutput}}{{^isManyOutput}}reactor.core.publisher.Mono{{/isManyOutput}}<{{outputType}}> {{methodName}}({{#isManyInput}}reactor.core.publisher.Flux<{{inputType}}>{{/isManyInput}}{{^isManyInput}}{{inputType}}{{/isManyInput}} request,io.netty.buffer.ByteBuf metadata);
         {{/methods}}
-        @java.lang.Override public final io.grpc.ServerServiceDefinition bindService() {
+
+        @java.lang.Override public default io.grpc.ServerServiceDefinition bindService() {
             return io.grpc.ServerServiceDefinition.builder(SERVICE)
                     {{#methods}}
                       .addMethod(
@@ -123,7 +121,7 @@ public final class {{className}} {
                     .build();
         }
 
-        private <TRequest extends com.google.protobuf.Message,TResponse extends com.google.protobuf.Message> MethodDescriptor<TRequest, TResponse> getMethod(
+        static <TRequest extends com.google.protobuf.Message,TResponse extends com.google.protobuf.Message> MethodDescriptor<TRequest, TResponse> getMethod(
               String service, String method, MethodType methodType,String rpcMethodName,final TRequest requestInstance,final TResponse responseInstance) {
               return MethodDescriptor.<TRequest, TResponse>newBuilder()
                     .setFullMethodName(generateFullMethodName(service, method))

@@ -7,6 +7,7 @@ import com.google.protobuf.DescriptorProtos.FileOptions;
 import com.google.protobuf.DescriptorProtos.MethodDescriptorProto;
 import com.google.protobuf.DescriptorProtos.ServiceDescriptorProto;
 import com.google.protobuf.DescriptorProtos.SourceCodeInfo.Location;
+import com.google.protobuf.Empty;
 import com.google.protobuf.compiler.PluginProtos;
 import com.salesforce.jprotoc.Generator;
 import com.salesforce.jprotoc.GeneratorException;
@@ -87,8 +88,8 @@ public abstract class AbstractRpcGenerator extends Generator {
       List<Location> locations,
       int serviceNumber) {
     ServiceContext serviceContext = new ServiceContext();
-    serviceContext.fileName = getClassPrefix() + serviceProto.getName() + "Rsocket.java";
-    serviceContext.className = getClassPrefix() + serviceProto.getName() + "Rsocket";
+    serviceContext.fileName = getClassPrefix() + serviceProto.getName() + "Rpc.java";
+    serviceContext.className = getClassPrefix() + serviceProto.getName() + "Rpc";
     serviceContext.serviceName = serviceProto.getName();
     serviceContext.deprecated =
         serviceProto.getOptions() != null && serviceProto.getOptions().getDeprecated();
@@ -132,7 +133,8 @@ public abstract class AbstractRpcGenerator extends Generator {
         methodProto.getOptions() != null && methodProto.getOptions().getDeprecated();
     methodContext.isManyInput = methodProto.getClientStreaming();
     methodContext.isManyOutput = methodProto.getServerStreaming();
-    methodContext.isFireAndForget = methodProto.getOptions().getExtension(RSocketOptions.options).getFireAndForget();
+    // If method returns Empty then it is fireAndForget
+    methodContext.isFireAndForget = isFireAndForget(methodContext, methodProto);
     methodContext.methodNumber = methodNumber;
 
     Location methodLocation =
@@ -145,7 +147,9 @@ public abstract class AbstractRpcGenerator extends Generator {
             .orElseGet(Location::getDefaultInstance);
     methodContext.javaDoc = getJavaDoc(getComments(methodLocation), getMethodJavaDocPrefix());
 
-    if (!methodProto.getClientStreaming() && !methodProto.getServerStreaming()) {
+    if (!methodProto.getClientStreaming()
+        && !methodProto.getServerStreaming()
+        && !methodContext.isFireAndForget) {
       methodContext.reactiveCallsMethodName = "requestReply";
       methodContext.grpcCallsMethodName = "asyncUnaryCall";
     }
@@ -166,6 +170,15 @@ public abstract class AbstractRpcGenerator extends Generator {
       methodContext.grpcCallsMethodName = "asyncUnaryCall";
     }
     return methodContext;
+  }
+
+  private boolean isFireAndForget(MethodContext methodContext, MethodDescriptorProto methodProto) {
+    // First check the custom fire_and_forget option
+    if (methodProto.getOptions().getExtension(RSocketOptions.options).getFireAndForget()) {
+      return true;
+    } else { // then decide based on the response type as Empty or not
+      return methodContext.outputType.contains(Empty.getDescriptor().getFullName());
+    }
   }
 
   private String lowerCaseFirst(String s) {

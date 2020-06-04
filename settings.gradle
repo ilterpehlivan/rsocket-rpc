@@ -1,5 +1,5 @@
 
-rootProject.name = 'rsocket-rpc-java'
+rootProject.name = 'rsocket-rpc'
 
 include 'rsocket-rpc-protobuf-idl'
 include 'rsocket-rpc-core-extension'

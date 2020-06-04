@@ -1,9 +1,9 @@
 package demo;
 
-import com.google.gson.internal.$Gson$Preconditions;
+import com.google.protobuf.Empty;
 import demo.proto.HelloRequest;
 import demo.proto.HelloResponse;
-import demo.proto.RsocketGreeterRsocket;
+import demo.proto.RsocketGreeterRpc;
 import io.netty.buffer.ByteBuf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,7 +11,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 
-public class GreeterImpl extends RsocketGreeterRsocket.GreeterImplBase {
+public class GreeterImpl implements RsocketGreeterRpc.GreeterImplBase {
   
   Logger logger = LoggerFactory.getLogger(GreeterImpl.class);
 
@@ -24,7 +24,14 @@ public class GreeterImpl extends RsocketGreeterRsocket.GreeterImplBase {
   }
 
   @Override
+  public Mono<Empty> greetAndForget(HelloRequest request, ByteBuf metadata) {
+    logger.info("inside the greetAndForget service impl");
+    return Mono.empty();
+  }
+
+  @Override
   public Flux<HelloResponse> multiGreet(HelloRequest request, ByteBuf metadata) {
+    logger.info("inside the multiGreet service implementation");
     return Flux.<HelloResponse>create(
             emmiter -> {
               for (int i = 0; i < 10; i++)

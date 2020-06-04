@@ -80,9 +80,6 @@ public class ClientTracerInterceptor implements RSocketInterceptor {
         // Recreating the payload
         payloadWithTracing = ByteBufPayload.create(payload.data(), metadataWithTracing);
 
-        // no need for the previous metadata
-        payload.metadata().release();
-
         try (CurrentTraceContext.Scope invokeScope =
             tracingContext.currentTraceContext.maybeScope(span.context())) {
 
@@ -224,9 +221,6 @@ public class ClientTracerInterceptor implements RSocketInterceptor {
         // Recreating the payload
         payloadWithTracing = ByteBufPayload.create(payload.data(), metadataWithTracing);
 
-        // no need for the previous metadata
-        payload.metadata().release();
-
         try (CurrentTraceContext.Scope invokeScope =
             tracingContext.currentTraceContext.maybeScope(span.context())) {
 
@@ -302,9 +296,6 @@ public class ClientTracerInterceptor implements RSocketInterceptor {
                       payloadWithTracing =
                           ByteBufPayload.create(payload.data(), metadataWithTracing);
 
-                      // no need for the previous metadata
-                      payload.metadata().release();
-
                       if (log.isTraceEnabled()) {
                         log.trace("meta information before call..");
                         MetaDataUtil.printRpcCompositeMetadata(payloadWithTracing.metadata());
@@ -338,7 +329,7 @@ public class ClientTracerInterceptor implements RSocketInterceptor {
 
       return delegate
           .requestChannel(payloadWithTracingStream)
-          //TODO:finish span in doOnError
+          // TODO:finish span in doOnError
           .doOnError(er -> log.error("error received", er));
     }
 

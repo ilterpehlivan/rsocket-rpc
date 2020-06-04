@@ -1,8 +1,12 @@
 .gradle
 /build/
 build/
+/build
 generated/
+/generated
 /out/
+out/
+/out
 **/classes
 
 .idea
