@@ -1,32 +1,29 @@
 package io.rsocket.rpc.core.extension;
 
-import io.rsocket.RSocketFactory.Start;
 import io.rsocket.rpc.core.extension.routing.RoutingServerRSocket;
 import io.rsocket.transport.netty.server.CloseableChannel;
-import java.time.Instant;
+import java.util.Locale;
 import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Mono;
 
 @Slf4j
 public final class RpcServer {
 
-  private final Start<CloseableChannel> transportController;
+  private final Mono<CloseableChannel> transportController;
   private final RoutingServerRSocket routingServerRSocket;
   private CloseableChannel closeableChannel;
   private Thread server;
   private final Object lock = new Object();
   private boolean started;
-  private boolean terminated;
 
-  // TODO: do we need routingServerRsocket here ?
-  protected RpcServer(
-      Start<CloseableChannel> transport, RoutingServerRSocket routingServerRSocket) {
+  protected RpcServer(Mono<CloseableChannel> transport, RoutingServerRSocket routingServerRSocket) {
     transportController = transport;
     this.routingServerRSocket = routingServerRSocket;
   }
 
   public RpcServer start() throws InterruptedException {
     synchronized (this.lock) {
-      closeableChannel = transportController.start().block();
+      closeableChannel = transportController.block();
       return this;
     }
   }
@@ -35,7 +32,7 @@ public final class RpcServer {
     synchronized (this.lock) {
       if (!started) return;
       closeableChannel.dispose();
-      //server.interrupt();
+      // server.interrupt();
     }
   }
 
@@ -49,12 +46,16 @@ public final class RpcServer {
                       .doOnSubscribe(
                           s -> {
                             started = true;
-                            log.info("server started");
+                            log.info("server started address {}", closeableChannel.address());
                           })
                       .block(),
-              "rsocket-server-"+ Instant.now().toString());
+              format("rsocket-server-", 0));
       server.start();
       while (!started) ; // wait until thread executed
     }
+  }
+
+  private static String format(String format, Object... args) {
+    return String.format(Locale.ROOT, format, args);
   }
 }

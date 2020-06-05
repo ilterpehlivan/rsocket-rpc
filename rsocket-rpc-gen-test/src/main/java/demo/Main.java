@@ -18,6 +18,7 @@ import io.rsocket.rpc.core.extension.tracing.RSocketTracing;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+//TODO: Move this class to tests
 public class Main {
 
   private static Logger logger = LoggerFactory.getLogger(Main.class);
@@ -26,20 +27,11 @@ public class Main {
     logger.info("starting the sample app");
 //    callRequestResponseWithTracing();
     // callRequestResponseWithMetrics();
-    //callRequestResponseWithTracingAndMetrics();
+    callRequestResponseWithTracingAndMetrics();
 //    callFireAndForgetWithTracingAndMetrics();
 
-    callRequestStreamWithTracingAndMetrics();
+//    callRequestStreamWithTracingAndMetrics();
 
-    //    CountDownLatch latch = new CountDownLatch(9);
-    //    rsocketGreeterStub
-    //        .multiGreet(HelloRequest.newBuilder().setName("hello").build())
-    //        .subscribe(
-    //            consumer -> System.out.println("client subscribe response " +
-    // consumer.getMessage()),
-    //            er -> System.out.println("client subscribe error " + er.getMessage()));
-
-    //    latch.await();
     logger.info("**End of main***");
   }
 

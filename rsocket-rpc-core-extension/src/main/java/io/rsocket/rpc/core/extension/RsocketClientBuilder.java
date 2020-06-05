@@ -6,6 +6,7 @@ import io.rsocket.RSocketFactory;
 import io.rsocket.RSocketFactory.ClientRSocketFactory;
 import io.rsocket.client.LoadBalancedRSocketMono;
 import io.rsocket.client.filter.RSocketSupplier;
+import io.rsocket.core.RSocketConnector;
 import io.rsocket.frame.decoder.PayloadDecoder;
 import io.rsocket.plugins.RSocketInterceptor;
 import io.rsocket.rpc.core.extension.micrometer.MicrometerRpcInterceptor;
@@ -71,11 +72,12 @@ public class RsocketClientBuilder {
     return this;
   }
 
-  //Following methods are filled automatically inside the stub
+  // Following methods are filled automatically inside the stub
   public RsocketClientBuilder serviceName(String service) {
     this.serviceName = service;
     return this;
   }
+
   public RsocketClientBuilder addMethods(Map<String, String> methods) {
     this.methodMapping = methods;
     return this;
@@ -85,25 +87,29 @@ public class RsocketClientBuilder {
 
     log.info("building client adress: {} port: {}", serviceAdress, servicePort);
 
-    ClientRSocketFactory clientRSocketFactory = RSocketFactory.connect();
+    RSocketConnector rSocketConnector = RSocketConnector.create();
     // add interceptors
     if (interceptorList != null) {
-      interceptorList.forEach(clientRSocketFactory::addRequesterPlugin);
+      interceptorList.forEach(
+          interceptor ->
+              rSocketConnector.interceptors(registry -> registry.forRequester(interceptor)));
     }
 
     if (meterRegistry != null) {
-      clientRSocketFactory.addRequesterPlugin(
-          new MicrometerRpcInterceptor(meterRegistry, RpcTag.getClientTags(serviceName,methodMapping)));
+      rSocketConnector.interceptors(
+          registry ->
+              registry.forRequester(
+                  new MicrometerRpcInterceptor(
+                      meterRegistry, RpcTag.getClientTags(serviceName, methodMapping))));
     }
 
     // It is needed for Loadbalanced case as it takes time
     CountDownLatch rsocketInit = new CountDownLatch(1);
 
     Mono<RSocket> rSocketMono =
-        clientRSocketFactory
-            .frameDecoder(PayloadDecoder.ZERO_COPY)
-            .transport(TcpClientTransport.create(serviceAdress, servicePort))
-            .start()
+        rSocketConnector
+            .payloadDecoder(PayloadDecoder.ZERO_COPY)
+            .connect(TcpClientTransport.create(serviceAdress, servicePort))
             .doOnError(
                 e ->
                     log.error(
@@ -148,6 +154,4 @@ public class RsocketClientBuilder {
   private String getServiceAdress() {
     return serviceAdress + ":" + servicePort;
   }
-
-
 }

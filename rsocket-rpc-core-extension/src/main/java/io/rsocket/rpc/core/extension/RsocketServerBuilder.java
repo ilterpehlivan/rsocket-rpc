@@ -8,6 +8,7 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.rsocket.RSocketFactory;
 import io.rsocket.RSocketFactory.ServerRSocketFactory;
 import io.rsocket.RSocketFactory.Start;
+import io.rsocket.core.RSocketServer;
 import io.rsocket.frame.decoder.PayloadDecoder;
 import io.rsocket.plugins.RSocketInterceptor;
 import io.rsocket.rpc.core.extension.micrometer.MicrometerRpcInterceptor;
@@ -60,34 +61,39 @@ public final class RsocketServerBuilder {
   }
 
   public final RpcServer build() {
-    ServerRSocketFactory serverRSocketFactory = RSocketFactory.receive();
+    RSocketServer rSocketServer = RSocketServer.create();
     if (interceptorList != null) {
-      interceptorList.forEach(serverRSocketFactory::addResponderPlugin);
+      interceptorList.forEach(
+          interceptor ->
+              rSocketServer.interceptors(registry -> registry.forResponder(interceptor)));
     }
 
     ServiceHandlerRegistry serviceHandlerRegistry = registryBuilder.build();
 
     if (meterRegistry != null) {
-      serverRSocketFactory.addResponderPlugin(
-          new MicrometerRpcInterceptor(
-              meterRegistry,
-              RpcTag.getServerTags(
-                  getServiceName(serviceHandlerRegistry), getMethodsMap(serviceHandlerRegistry))));
+      rSocketServer.interceptors(
+          registry ->
+              registry.forResponder(
+                  new MicrometerRpcInterceptor(
+                      meterRegistry,
+                      RpcTag.getServerTags(
+                          getServiceName(serviceHandlerRegistry),
+                          getMethodsMap(serviceHandlerRegistry)))));
     }
 
     RoutingServerRSocket routingServerRSocket =
         new RoutingServerRSocket(
             Preconditions.checkNotNull(serviceHandlerRegistry, "registryBuilder cannot be null"));
 
-    Start<CloseableChannel> transport =
-        serverRSocketFactory
+    Mono<CloseableChannel> transport =
+        rSocketServer
             // TODO: frame may be also part of builder
-            .frameDecoder(PayloadDecoder.ZERO_COPY)
+            .payloadDecoder(PayloadDecoder.ZERO_COPY)
             .acceptor(
                 (setupPayload, reactiveSocket) -> {
                   return Mono.just(routingServerRSocket);
                 })
-            .transport(TcpServerTransport.create(port));
+            .bind(TcpServerTransport.create(port));
     return new RpcServer(transport, routingServerRSocket);
   }
 
