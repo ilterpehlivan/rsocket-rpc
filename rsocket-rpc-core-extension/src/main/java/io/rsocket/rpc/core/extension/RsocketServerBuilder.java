@@ -4,10 +4,6 @@ import com.google.common.base.Preconditions;
 import io.grpc.BindableService;
 import io.grpc.ServerMethodDefinition;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import io.rsocket.RSocketFactory;
-import io.rsocket.RSocketFactory.ServerRSocketFactory;
-import io.rsocket.RSocketFactory.Start;
 import io.rsocket.core.RSocketServer;
 import io.rsocket.frame.decoder.PayloadDecoder;
 import io.rsocket.plugins.RSocketInterceptor;
@@ -117,7 +113,7 @@ public final class RsocketServerBuilder {
     return serviceHandlerRegistry.getServices().get(0).getServiceDescriptor().getName();
   }
 
-  public RsocketServerBuilder withMetrics(SimpleMeterRegistry serverMeterRegistry) {
+  public RsocketServerBuilder withMetrics(MeterRegistry serverMeterRegistry) {
     this.meterRegistry = serverMeterRegistry;
     return this;
   }

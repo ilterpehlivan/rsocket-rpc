@@ -2,8 +2,6 @@ package io.rsocket.rpc.core.extension;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.rsocket.RSocket;
-import io.rsocket.RSocketFactory;
-import io.rsocket.RSocketFactory.ClientRSocketFactory;
 import io.rsocket.client.LoadBalancedRSocketMono;
 import io.rsocket.client.filter.RSocketSupplier;
 import io.rsocket.core.RSocketConnector;
@@ -21,17 +19,23 @@ import java.util.concurrent.CountDownLatch;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
 
 @Slf4j
 public class RsocketClientBuilder {
+
+  private static final long DEFAULT_MAX_RETRY = 10;
+  private static final long DEFAULT_MIN_BACK_OFF = 100;
   private String serviceAdress;
   private int servicePort;
   private boolean isLoadbalanced = false;
   private List<RSocketInterceptor> interceptorList;
-  private int retryCount = 5;
   private MeterRegistry meterRegistry;
   private Map<String, String> methodMapping;
   private String serviceName;
+  private boolean enableReconnect = false;
+  private long maxRetryAttempts = DEFAULT_MAX_RETRY;
+  private long minBackOffValue = DEFAULT_MIN_BACK_OFF;
 
   private RsocketClientBuilder(String serviceUrl, int servicePort) {
     this.serviceAdress = serviceUrl;
@@ -42,8 +46,16 @@ public class RsocketClientBuilder {
     return new RsocketClientBuilder(serviceUrl, servicePort);
   }
 
+  /**
+   * Depends on the issue https://github.com/rsocket/rsocket-java/issues/781 Until then no support
+   * for loadbalanced monos
+   *
+   * @return
+   */
+  @Deprecated
   public RsocketClientBuilder withLoadBalancing() {
-    this.isLoadbalanced = true;
+    // TODO: after issue is fixed above this needs to be revisited
+    this.isLoadbalanced = false;
     return this;
   }
 
@@ -52,8 +64,10 @@ public class RsocketClientBuilder {
     return this;
   }
 
-  public RsocketClientBuilder withRetry(int retry) {
-    this.retryCount = retry;
+  public RsocketClientBuilder withRetry(int retry, long minDuration) {
+    this.maxRetryAttempts = retry;
+    this.minBackOffValue = minDuration;
+    this.enableReconnect = true;
     return this;
   }
 
@@ -103,17 +117,24 @@ public class RsocketClientBuilder {
                       meterRegistry, RpcTag.getClientTags(serviceName, methodMapping))));
     }
 
+    // reconnect strategy
+    if (!isLoadbalanced && enableReconnect) {
+      rSocketConnector.reconnect(
+          Retry.backoff(maxRetryAttempts, Duration.ofMillis(minBackOffValue))
+              .doBeforeRetry(rs -> log.warn("Retrying to connect, failed with signal {}", rs)));
+    }
+
     // It is needed for Loadbalanced case as it takes time
     CountDownLatch rsocketInit = new CountDownLatch(1);
-
     Mono<RSocket> rSocketMono =
         rSocketConnector
             .payloadDecoder(PayloadDecoder.ZERO_COPY)
             .connect(TcpClientTransport.create(serviceAdress, servicePort))
             .doOnError(
                 e ->
+                    //TODO:add error counter from micrometer to count the connection errors as metrics rpc.connection.counter
                     log.error(
-                        "Error received while connecting {} {} ..retry",
+                        "Error received while connecting {} {}",
                         getServiceAdress(),
                         e.getMessage()))
             .doOnSuccess(
@@ -139,7 +160,7 @@ public class RsocketClientBuilder {
               LoadBalancedRSocketMono.DEFAULT_MIN_APERTURE,
               LoadBalancedRSocketMono.DEFAULT_MAX_APERTURE,
               LoadBalancedRSocketMono.DEFAULT_MAX_REFRESH_PERIOD_MS,
-              retryCount,
+              maxRetryAttempts,
               // TODO: make them configurable as well
               Duration.ofMillis(300),
               Duration.ofSeconds(5));

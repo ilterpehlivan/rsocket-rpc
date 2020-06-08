@@ -25,6 +25,13 @@ import reactor.util.function.Tuples;
 public class ReactiveTest {
 
   @Test
+  public void testMono() {
+    Mono.just("Test-Start")
+        .doFinally(signalType -> System.out.println("signal received "+signalType)).block();
+  }
+
+
+  @Test
   public void testReferenceStream2Function2Merge() throws InterruptedException {
     Flux<Integer> rangeFlux = Flux.range(1, 5);
     BiFunction<Integer, Integer, Integer> method = (i, s) -> i * s;

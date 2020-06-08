@@ -9,28 +9,31 @@ import brave.propagation.ThreadLocalCurrentTraceContext;
 import demo.proto.HelloRequest;
 import demo.proto.RsocketGreeterRpc;
 import demo.proto.RsocketGreeterRpc.RsocketGreeterStub;
+import io.micrometer.core.instrument.Meter;
+import io.micrometer.core.instrument.search.Search;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.rsocket.rpc.core.extension.RpcClient;
 import io.rsocket.rpc.core.extension.RpcServer;
 import io.rsocket.rpc.core.extension.RsocketClientBuilder;
 import io.rsocket.rpc.core.extension.RsocketServerBuilder;
 import io.rsocket.rpc.core.extension.tracing.RSocketTracing;
+import java.util.Collection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-//TODO: Move this class to tests
+// TODO: Move this class to tests
 public class Main {
 
   private static Logger logger = LoggerFactory.getLogger(Main.class);
 
   public static void main(String[] args) throws InterruptedException {
     logger.info("starting the sample app");
-//    callRequestResponseWithTracing();
-    // callRequestResponseWithMetrics();
+    //    callRequestResponseWithTracing();
+//     callRequestResponseWithMetrics();
     callRequestResponseWithTracingAndMetrics();
-//    callFireAndForgetWithTracingAndMetrics();
+    //    callFireAndForgetWithTracingAndMetrics();
 
-//    callRequestStreamWithTracingAndMetrics();
+    //    callRequestStreamWithTracingAndMetrics();
 
     logger.info("**End of main***");
   }
@@ -118,13 +121,15 @@ public class Main {
       RsocketGreeterStub rsocketGreeterStub = RsocketGreeterRpc.newReactorStub(clientBuilder);
       rsocketGreeterStub
           .greet(HelloRequest.newBuilder().setName("hello").build())
+          .doOnCancel(()->logger.info("upstream is cancelled"))
+          .doOnError(er->logger.error("error received ",er))
           .doOnNext(r -> logger.info("RequestResponse:response received {}", r.getMessage()))
           .block();
     } finally {
       span.finish();
       server.shutDown();
-      printClientMetrics(simpleClientMeterRegistry);
-      printServerMetrics(simpleServerMeterRegistry);
+      printClientMetrics(simpleClientMeterRegistry, "request.greet");
+      printServerMetrics(simpleServerMeterRegistry,"request.greet");
     }
   }
 
@@ -182,6 +187,34 @@ public class Main {
         });
   }
 
+  private static void printServerMetrics(
+      SimpleMeterRegistry simpleClientMeterRegistry, String name) {
+    Search search = simpleClientMeterRegistry.find(name);
+    Collection<Meter> meters = search.meters();
+    if (meters != null) {
+      meters.forEach(
+          meter -> {
+            logger.info("Server meter id {} result {}", meter.getId(), meter.measure());
+          });
+    } else {
+      logger.info("Server meter is null {}", name);
+    }
+  }
+
+  private static void printClientMetrics(
+      SimpleMeterRegistry simpleClientMeterRegistry, String name) {
+    Search search = simpleClientMeterRegistry.find(name);
+    Collection<Meter> meters = search.meters();
+    if (meters != null) {
+      meters.forEach(
+          meter -> {
+            logger.info("client meter id {} result {}", meter.getId(), meter.measure());
+          });
+    } else {
+      logger.info("Client meter is null {}", name);
+    }
+  }
+
   private static void printClientMetrics(SimpleMeterRegistry simpleClientMeterRegistry) {
     simpleClientMeterRegistry.forEachMeter(
         meter -> {
@@ -205,7 +238,7 @@ public class Main {
 
     RsocketClientBuilder rsocketClientBuilder =
         RsocketClientBuilder.forAddress("localhost", 9091)
-            .withLoadBalancing()
+//            .withLoadBalancing()
             .withMetrics(simpleClientMeterRegistry);
 
     RsocketGreeterStub rsocketGreeterStub = RsocketGreeterRpc.newReactorStub(rsocketClientBuilder);
@@ -216,15 +249,8 @@ public class Main {
           .doOnNext(r -> logger.info("RequestResponse:response received {}", r.getMessage()))
           .block();
     } finally {
-      simpleClientMeterRegistry.forEachMeter(
-          meter -> {
-            logger.info("client meter id {} result {}", meter.getId(), meter.measure());
-          });
-
-      simpleServerMeterRegistry.forEachMeter(
-          meter -> {
-            logger.info("server meter id {} result {}", meter.getId(), meter.measure());
-          });
+      printClientMetrics(simpleClientMeterRegistry, "request.greet");
+      printServerMetrics(simpleServerMeterRegistry,"request.greet");
       server.shutDown();
     }
   }

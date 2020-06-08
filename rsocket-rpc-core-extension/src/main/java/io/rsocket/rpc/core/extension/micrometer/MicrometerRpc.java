@@ -25,11 +25,13 @@ import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.SignalType;
 
+@Slf4j
 public class MicrometerRpc implements RSocket {
 
   private final RSocket delegate;
@@ -210,6 +212,9 @@ public class MicrometerRpc implements RSocket {
 
     @Override
     public void accept(SignalType signalType) {
+      if (log.isTraceEnabled()){
+        log.trace("increasing the counter {} for signaltype {}",this.onComplete.getId().getName(),signalType);
+      }
       switch (signalType) {
         case CANCEL:
           cancel.increment();
@@ -251,6 +256,9 @@ public class MicrometerRpc implements RSocket {
 
     @Override
     public void accept(Sample sample, SignalType signalType) {
+      if (log.isTraceEnabled()){
+        log.trace("sampling the timer {} for signaltype {}",this.onComplete.getId().getName(),signalType);
+      }
       switch (signalType) {
         case CANCEL:
           sample.stop(cancel);

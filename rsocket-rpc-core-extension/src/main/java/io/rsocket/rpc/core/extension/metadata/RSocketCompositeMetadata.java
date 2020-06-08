@@ -6,7 +6,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.CompositeByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.rsocket.metadata.CompositeMetadata;
-import io.rsocket.metadata.CompositeMetadataFlyweight;
+import io.rsocket.metadata.CompositeMetadataCodec;
 import io.rsocket.metadata.WellKnownMimeType;
 import io.rsocket.rpc.core.extension.metadata.RpcMetadata.RpcHeadersMetadata;
 import io.rsocket.rpc.core.extension.metadata.RpcMetadata.RpcMethodMetadata;
@@ -58,10 +58,10 @@ public class RSocketCompositeMetadata implements MetadataAware {
     for (Map.Entry<String, ByteBuf> entry : metadataStore.entrySet()) {
       WellKnownMimeType wellKnownMimeType = WellKnownMimeType.fromString(entry.getKey());
       if (wellKnownMimeType != UNPARSEABLE_MIME_TYPE) {
-        CompositeMetadataFlyweight.encodeAndAddMetadata(
+        CompositeMetadataCodec.encodeAndAddMetadata(
             compositeByteBuf, PooledByteBufAllocator.DEFAULT, wellKnownMimeType, entry.getValue());
       } else {
-        CompositeMetadataFlyweight.encodeAndAddMetadata(
+        CompositeMetadataCodec.encodeAndAddMetadata(
             compositeByteBuf, PooledByteBufAllocator.DEFAULT, entry.getKey(), entry.getValue());
       }
     }
@@ -70,7 +70,7 @@ public class RSocketCompositeMetadata implements MetadataAware {
 
   @Override
   public void load(ByteBuf byteBuf) {
-    CompositeMetadata compositeMetadata = new CompositeMetadata(byteBuf, false);
+    CompositeMetadata compositeMetadata = new CompositeMetadata(byteBuf, true);
     for (CompositeMetadata.Entry entry : compositeMetadata) {
       metadataStore.put(entry.getMimeType(), entry.getContent());
     }
@@ -133,8 +133,6 @@ public class RSocketCompositeMetadata implements MetadataAware {
 
   @Override
   public String toString() {
-    return "RSocketCompositeMetadata{" +
-        "metadataStore=" + metadataStore +
-        '}';
+    return "RSocketCompositeMetadata{" + "metadataStore=" + metadataStore + '}';
   }
 }

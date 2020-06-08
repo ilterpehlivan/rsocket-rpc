@@ -76,10 +76,10 @@ public class MetaDataUtil {
     RSocketCompositeMetadata compositeMetadata =
         RSocketCompositeMetadata.from(Unpooled.copiedBuffer(rpcComposite));
     compositeMetadata.addMetadata(tracing);
-    // no need this anymore
+    // no need this anymore as we copied
     rpcComposite.release();
     // TODO:Why is this retain needed ? Otherwise it gives release error
-    return compositeMetadata.getContent().retain();
+    return compositeMetadata.getContent();
   }
 
   public static void printRpcCompositeMetadata(ByteBuf rpcByteBuf) {
