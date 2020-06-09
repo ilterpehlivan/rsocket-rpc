@@ -127,7 +127,6 @@ public class ServerCalls {
 
   // Handlers
 
-  @Slf4j
   private static final class ReactiveRequestResponseCallHandler<ReqT, RespT>
       implements UnaryServerCallHandler<ReqT, RespT> {
 
@@ -140,7 +139,6 @@ public class ServerCalls {
 
     @Override
     public CorePublisher<RespT> startCall(ReqT request, ByteBuf meta) {
-      log.info("inside the startCall for requestResponse");
       return requestResponse.apply(request, meta);
     }
   }
