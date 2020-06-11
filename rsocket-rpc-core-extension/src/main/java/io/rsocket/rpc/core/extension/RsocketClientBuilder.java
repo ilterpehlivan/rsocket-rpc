@@ -1,5 +1,6 @@
 package io.rsocket.rpc.core.extension;
 
+import brave.Tracing;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.rsocket.RSocket;
 import io.rsocket.client.LoadBalancedRSocketMono;
@@ -9,6 +10,7 @@ import io.rsocket.frame.decoder.PayloadDecoder;
 import io.rsocket.plugins.RSocketInterceptor;
 import io.rsocket.rpc.core.extension.micrometer.MicrometerRpcInterceptor;
 import io.rsocket.rpc.core.extension.micrometer.RpcTag;
+import io.rsocket.rpc.core.extension.tracing.RSocketTracing;
 import io.rsocket.transport.netty.client.TcpClientTransport;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -36,6 +38,7 @@ public class RsocketClientBuilder {
   private boolean enableReconnect = false;
   private long maxRetryAttempts = DEFAULT_MAX_RETRY;
   private long minBackOffValue = DEFAULT_MIN_BACK_OFF;
+  private Tracing tracing;
 
   private RsocketClientBuilder(String serviceUrl, int servicePort) {
     this.serviceAdress = serviceUrl;
@@ -56,6 +59,11 @@ public class RsocketClientBuilder {
   public RsocketClientBuilder withLoadBalancing() {
     // TODO: after issue is fixed above this needs to be revisited
     this.isLoadbalanced = false;
+    return this;
+  }
+
+  public RsocketClientBuilder withTracing(Tracing tracing) {
+    this.tracing = tracing;
     return this;
   }
 
@@ -109,12 +117,20 @@ public class RsocketClientBuilder {
               rSocketConnector.interceptors(registry -> registry.forRequester(interceptor)));
     }
 
+    // TODO: how to distinguish explicit meterRegistry from interceptors ?
     if (meterRegistry != null) {
       rSocketConnector.interceptors(
           registry ->
               registry.forRequester(
                   new MicrometerRpcInterceptor(
                       meterRegistry, RpcTag.getClientTags(serviceName, methodMapping))));
+    }
+
+    if (tracing != null) {
+      rSocketConnector.interceptors(
+          interceptorRegistry ->
+              interceptorRegistry.forRequester(
+                  RSocketTracing.create(tracing).newClientInterceptor()));
     }
 
     // reconnect strategy
@@ -132,7 +148,8 @@ public class RsocketClientBuilder {
             .connect(TcpClientTransport.create(serviceAdress, servicePort))
             .doOnError(
                 e ->
-                    //TODO:add error counter from micrometer to count the connection errors as metrics rpc.connection.counter
+                    // TODO:add error counter from micrometer to count the connection errors as
+                    // metrics rpc.connection.counter
                     log.error(
                         "Error received while connecting {} {}",
                         getServiceAdress(),

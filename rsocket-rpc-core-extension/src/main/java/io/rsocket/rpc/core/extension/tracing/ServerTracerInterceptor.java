@@ -1,17 +1,23 @@
 package io.rsocket.rpc.core.extension.tracing;
 
+import static io.rsocket.rpc.core.extension.tracing.TracingUtil.getServerSpanWithTags;
+import static io.rsocket.rpc.core.extension.tracing.TracingUtil.getServerTraceRequest;
+import static io.rsocket.rpc.core.extension.tracing.TracingUtil.getSpanPassingOperator;
+import static io.rsocket.rpc.core.extension.tracing.TracingUtil.handleError;
+import static io.rsocket.rpc.core.extension.tracing.TracingUtil.handleStreamCompletion;
+
 import brave.Span;
-import brave.Span.Kind;
 import brave.propagation.CurrentTraceContext;
 import brave.propagation.CurrentTraceContext.Scope;
 import brave.propagation.TraceContextOrSamplingFlags;
 import io.rsocket.Payload;
 import io.rsocket.RSocket;
-import io.rsocket.ResponderRSocket;
 import io.rsocket.plugins.RSocketInterceptor;
 import io.rsocket.rpc.core.extension.metadata.MetaDataUtil;
+import io.rsocket.rpc.core.extension.metadata.MetaDataUtil.RsocketRpcRequest;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
@@ -37,7 +43,7 @@ public class ServerTracerInterceptor implements RSocketInterceptor {
     return new ServerTraceRSocketResponder(tracingContext, delegate);
   }
 
-  private class ServerTraceRSocketResponder implements ResponderRSocket {
+  private class ServerTraceRSocketResponder implements RSocket {
 
     private final RSocket delegate;
     private final TracingContext tracingContext;
@@ -62,7 +68,9 @@ public class ServerTracerInterceptor implements RSocketInterceptor {
       TraceContextOrSamplingFlags extractedContex =
           tracingContext.mapExtractor.extract(traceSpanMap);
 
-      Span span = nextSpan(extractedContex, tracingContext).kind(Span.Kind.SERVER);
+      RsocketRpcRequest rpcRequest = MetaDataUtil.getRpcRequest(payload.metadata());
+      Span span = getServerSpanWithTags(extractedContex, rpcRequest, tracingContext);
+
       if (log.isTraceEnabled()) {
         log.trace("tracing context in the service {}", span);
       }
@@ -77,7 +85,10 @@ public class ServerTracerInterceptor implements RSocketInterceptor {
             .fireAndForget(payload)
             .transform(
                 TracingUtil.<Void>scopePassingSpanOperator(
-                    tracingContext.currentTraceContext, span.context()));
+                    tracingContext.currentTraceContext, span.context()))
+            .doOnError(handleError(span))
+            .doFinally(
+                handleStreamCompletion(rpcRequest.getService(), rpcRequest.getMethod(), span));
       } catch (Throwable e) {
         error = e;
         throw e;
@@ -104,11 +115,9 @@ public class ServerTracerInterceptor implements RSocketInterceptor {
       TraceContextOrSamplingFlags extractedContex =
           tracingContext.mapExtractor.extract(traceSpanMap);
 
-      //      Hooks.onLastOperator(
-      //          TracingUtil.scopePassingSpanOperator(
-      //              tracingContext.currentTraceContext, extractedContex.context()));
+      RsocketRpcRequest rpcRequest = MetaDataUtil.getRpcRequest(payload.metadata());
+      Span span = getServerSpanWithTags(extractedContex, rpcRequest, tracingContext);
 
-      Span span = nextSpan(extractedContex, tracingContext).kind(Span.Kind.SERVER);
       if (log.isTraceEnabled()) {
         log.trace("tracing context in the service {}", span);
       }
@@ -121,9 +130,10 @@ public class ServerTracerInterceptor implements RSocketInterceptor {
         }
         return delegate
             .requestResponse(payload)
-            .transform(
-                TracingUtil.<Payload>scopePassingSpanOperator(
-                    tracingContext.currentTraceContext, span.context()));
+            .transform(getSpanPassingOperator(tracingContext, span))
+            .doOnError(handleError(span))
+            .doFinally(
+                handleStreamCompletion(rpcRequest.getService(), rpcRequest.getMethod(), span));
       } catch (Throwable e) {
         error = e;
         throw e;
@@ -147,7 +157,9 @@ public class ServerTracerInterceptor implements RSocketInterceptor {
       TraceContextOrSamplingFlags extractedContex =
           tracingContext.mapExtractor.extract(traceSpanMap);
 
-      Span span = nextSpan(extractedContex, tracingContext).kind(Span.Kind.SERVER);
+      RsocketRpcRequest rpcRequest = MetaDataUtil.getRpcRequest(payload.metadata());
+      Span span = getServerSpanWithTags(extractedContex, rpcRequest, tracingContext);
+
       if (log.isTraceEnabled()) {
         log.trace("tracing context in the service {}", span);
       }
@@ -160,9 +172,10 @@ public class ServerTracerInterceptor implements RSocketInterceptor {
         }
         return delegate
             .requestStream(payload)
-            .transform(
-                TracingUtil.<Payload>scopePassingSpanOperator(
-                    tracingContext.currentTraceContext, span.context()));
+            .transform(getSpanPassingOperator(tracingContext, span))
+            .doOnError(handleError(span))
+            .doFinally(
+                handleStreamCompletion(rpcRequest.getService(), rpcRequest.getMethod(), span));
       } catch (Throwable e) {
         error = e;
         throw e;
@@ -174,6 +187,7 @@ public class ServerTracerInterceptor implements RSocketInterceptor {
     @Override
     public Flux<Payload> requestChannel(Publisher<Payload> payloads) {
 
+      AtomicReference<TracingRequest> tracingRequest = new AtomicReference<>();
       Flux<Payload> payloadFlux =
           Flux.from(payloads)
               .switchOnFirst(
@@ -192,7 +206,12 @@ public class ServerTracerInterceptor implements RSocketInterceptor {
                     TraceContextOrSamplingFlags extractedContex =
                         tracingContext.mapExtractor.extract(traceSpanMap);
 
-                    Span span = nextSpan(extractedContex, tracingContext).kind(Kind.SERVER);
+                    RsocketRpcRequest rpcRequest = MetaDataUtil.getRpcRequest(payload.metadata());
+                    tracingRequest.compareAndSet(
+                        null, getServerTraceRequest(extractedContex, rpcRequest, tracingContext));
+
+                    Span span = tracingRequest.get().getSpan();
+
                     if (log.isTraceEnabled()) {
                       log.trace("tracing context in the service {}", span);
                     }
@@ -203,9 +222,7 @@ public class ServerTracerInterceptor implements RSocketInterceptor {
                       }
                       return flux.skip(1)
                           .startWith(payload)
-                          .transform(
-                              TracingUtil.<Payload>scopePassingSpanOperator(
-                                  tracingContext.currentTraceContext, span.context()));
+                          .transform(getSpanPassingOperator(tracingContext, span));
                     } catch (Throwable e) {
                       log.error("error received, closing span ", e);
                       span.error(e).finish();
@@ -213,17 +230,19 @@ public class ServerTracerInterceptor implements RSocketInterceptor {
                     }
                   });
 
-      return delegate.requestChannel(payloadFlux);
+      return delegate
+          .requestChannel(payloadFlux)
+          .doOnError(handleError(tracingRequest.get().getSpan()))
+          .doFinally(
+              handleStreamCompletion(
+                  tracingRequest.get().getServiceName(),
+                  tracingRequest.get().getMethodName(),
+                  tracingRequest.get().getSpan()));
     }
 
     // TODO:below functions to implement
     @Override
     public Mono<Void> metadataPush(Payload payload) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Flux<Payload> requestChannel(Payload payload, Publisher<Payload> payloads) {
       throw new UnsupportedOperationException();
     }
 
@@ -235,13 +254,6 @@ public class ServerTracerInterceptor implements RSocketInterceptor {
     @Override
     public void dispose() {
       delegate.dispose();
-    }
-
-    private Span nextSpan(
-        TraceContextOrSamplingFlags extractedContex, TracingContext tracingContext) {
-      return extractedContex.context() != null
-          ? tracingContext.tracer.joinSpan(extractedContex.context())
-          : tracingContext.tracer.nextSpan(extractedContex);
     }
   }
 }

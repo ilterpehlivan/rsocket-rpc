@@ -1,5 +1,7 @@
 package io.rsocket.rpc.core.extension;
 
+import brave.Tracing;
+import brave.rpc.RpcTracing;
 import com.google.common.base.Preconditions;
 import io.grpc.BindableService;
 import io.grpc.ServerMethodDefinition;
@@ -12,6 +14,7 @@ import io.rsocket.rpc.core.extension.micrometer.RpcTag;
 import io.rsocket.rpc.core.extension.routing.RoutingServerRSocket;
 import io.rsocket.rpc.core.extension.routing.SchemaDescriptor;
 import io.rsocket.rpc.core.extension.routing.ServiceHandlerRegistry;
+import io.rsocket.rpc.core.extension.tracing.RSocketTracing;
 import io.rsocket.transport.netty.server.CloseableChannel;
 import io.rsocket.transport.netty.server.TcpServerTransport;
 import java.util.ArrayList;
@@ -26,6 +29,7 @@ public final class RsocketServerBuilder {
   List<RSocketInterceptor> interceptorList;
   ServiceHandlerRegistry.Builder registryBuilder = new ServiceHandlerRegistry.Builder();
   private MeterRegistry meterRegistry;
+  private Tracing tracing;
 
   private RsocketServerBuilder(int port) {
     this.port = port;
@@ -66,6 +70,7 @@ public final class RsocketServerBuilder {
 
     ServiceHandlerRegistry serviceHandlerRegistry = registryBuilder.build();
 
+    // TODO: how to distinguish explicit meterRegistry from interceptors ?
     if (meterRegistry != null) {
       rSocketServer.interceptors(
           registry ->
@@ -75,6 +80,13 @@ public final class RsocketServerBuilder {
                       RpcTag.getServerTags(
                           getServiceName(serviceHandlerRegistry),
                           getMethodsMap(serviceHandlerRegistry)))));
+    }
+
+    if (tracing != null) {
+      rSocketServer.interceptors(
+          interceptorRegistry ->
+              interceptorRegistry.forResponder(
+                  RSocketTracing.create(tracing).newServerInterceptor()));
     }
 
     RoutingServerRSocket routingServerRSocket =
@@ -115,6 +127,11 @@ public final class RsocketServerBuilder {
 
   public RsocketServerBuilder withMetrics(MeterRegistry serverMeterRegistry) {
     this.meterRegistry = serverMeterRegistry;
+    return this;
+  }
+
+  public RsocketServerBuilder withTracing(Tracing tracing) {
+    this.tracing = tracing;
     return this;
   }
 }

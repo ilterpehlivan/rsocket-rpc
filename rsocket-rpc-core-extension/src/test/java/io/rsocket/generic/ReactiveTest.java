@@ -79,9 +79,16 @@ public class ReactiveTest {
             .switchOnFirst(
                 (first, flux) -> {
                   int f = first.get();
-                  return flux.skip(1).startWith(f * 100);
+                  return flux
+                      .skip(1)
+                      .startWith(f * 100)
+                      .subscriberContext(ctx->{
+                        ctx.put("start",f);
+                        ctx.put("test","test-"+f);
+                        return ctx;
+                      });
                 })
-            .doOnComplete(() -> System.out.println("Completed"));
+            .doOnComplete(() -> System.out.println("Downstream Completed"));
 
     Flux<Integer> results = getResults(parameters);
     results.subscribe(res -> System.out.println("result:" + res));

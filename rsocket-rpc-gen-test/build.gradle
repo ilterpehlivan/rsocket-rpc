@@ -50,10 +50,11 @@ dependencies {
     compile 'com.salesforce.servicelibs:jprotoc:1.0.1'
     compile 'com.salesforce.servicelibs:rxgrpc-stub'
     compile 'io.projectreactor:reactor-core'
-    compile "io.zipkin.brave:brave:5.10.2"
+    compile "io.zipkin.brave:brave"
+    compile "io.zipkin.reporter2:zipkin-sender-okhttp3"
 //    compile "io.zipkin.brave:brave-context-log4j12:5.10.2"
-    compile "io.zipkin.brave:brave-context-slf4j:5.10.2"
-    compile "io.zipkin.brave:brave-instrumentation-rpc:5.10.2"
+    compile "io.zipkin.brave:brave-context-slf4j:5.12.2"
+    compile "io.zipkin.brave:brave-instrumentation-rpc"
 //    compile "org.apache.logging.log4j:log4j-api:2.7"
 //    compile "org.apache.logging.log4j:log4j-core:2.7"
     compile "ch.qos.logback:logback-classic:1.2.3"

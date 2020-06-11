@@ -1,5 +1,11 @@
 package io.rsocket.rpc.core.extension.tracing;
 
+import static io.rsocket.rpc.core.extension.tracing.TracingUtil.getClientSpanWithTags;
+import static io.rsocket.rpc.core.extension.tracing.TracingUtil.getClientTraceRequest;
+import static io.rsocket.rpc.core.extension.tracing.TracingUtil.getSpanPassingOperator;
+import static io.rsocket.rpc.core.extension.tracing.TracingUtil.handleError;
+import static io.rsocket.rpc.core.extension.tracing.TracingUtil.handleStreamCompletion;
+
 import brave.Span;
 import brave.propagation.CurrentTraceContext;
 import brave.propagation.TraceContext;
@@ -7,13 +13,13 @@ import io.netty.buffer.ByteBuf;
 import io.netty.util.ReferenceCountUtil;
 import io.rsocket.Payload;
 import io.rsocket.RSocket;
-import io.rsocket.ResponderRSocket;
 import io.rsocket.plugins.RSocketInterceptor;
 import io.rsocket.rpc.core.extension.metadata.MapBasedTracingMetadata;
 import io.rsocket.rpc.core.extension.metadata.MetaDataUtil;
 import io.rsocket.rpc.core.extension.metadata.MetaDataUtil.RsocketRpcRequest;
 import io.rsocket.util.ByteBufPayload;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
@@ -39,7 +45,11 @@ public class ClientTracerInterceptor implements RSocketInterceptor {
     return new ClientTraceRSocketResponder(tracingContext, delegate);
   }
 
-  private class ClientTraceRSocketResponder implements ResponderRSocket {
+  /**
+   * TODO: need to refactor this with the recommended way
+   * https://github.com/openzipkin/brave/tree/master/instrumentation/rpc
+   */
+  private class ClientTraceRSocketResponder implements RSocket {
 
     private final RSocket delegate;
     private final TracingContext tracingContext;
@@ -56,10 +66,10 @@ public class ClientTracerInterceptor implements RSocketInterceptor {
       }
       TraceContext invocationContext = tracingContext.currentTraceContext.get();
       RsocketRpcRequest rpcRequest = MetaDataUtil.getRpcRequest(payload.metadata());
-      TracingRequest request = new TracingRequest(rpcRequest.getService(), rpcRequest.getMethod());
-      Span span =
-          tracingContext.tracer.nextSpanWithParent(
-              tracingContext.sampler, request, invocationContext);
+      TracingRequest tracingRequest =
+          new TracingRequest(rpcRequest.getService(), rpcRequest.getMethod());
+      Span span = getClientSpanWithTags(tracingContext, invocationContext, tracingRequest);
+
       if (log.isTraceEnabled()) {
         log.trace("tracing context is created as {}", span);
       }
@@ -69,7 +79,7 @@ public class ClientTracerInterceptor implements RSocketInterceptor {
       try (CurrentTraceContext.Scope scope =
           tracingContext.currentTraceContext.maybeScope(span.context())) {
         tracingContext.mapInjector.inject(span.context(), map);
-        span.kind(Span.Kind.CLIENT).start();
+        span.start();
         if (log.isDebugEnabled()) {
           log.debug("tracing is added to the request metadata with map {}", map);
         }
@@ -92,17 +102,9 @@ public class ClientTracerInterceptor implements RSocketInterceptor {
               .transform(
                   TracingUtil.<Void>scopePassingSpanOperator(
                       tracingContext.currentTraceContext, span.context()))
-              .doOnNext(
-                  p -> {
-                    if (log.isDebugEnabled()) {
-                      log.debug(
-                          "completed calling the service {} method {} with tracing scope {}",
-                          rpcRequest.getService(),
-                          rpcRequest.getMethod(),
-                          scope);
-                    }
-                  })
-              .doOnError(er -> log.error("error received", er));
+              .doOnError(handleError(span))
+              .doFinally(
+                  handleStreamCompletion(rpcRequest.getService(), rpcRequest.getMethod(), span));
         }
       } catch (Throwable e) {
         log.error("error received for client tracer interceptor", e);
@@ -121,10 +123,10 @@ public class ClientTracerInterceptor implements RSocketInterceptor {
       }
       TraceContext invocationContext = tracingContext.currentTraceContext.get();
       RsocketRpcRequest rpcRequest = MetaDataUtil.getRpcRequest(payload.metadata());
-      TracingRequest request = new TracingRequest(rpcRequest.getService(), rpcRequest.getMethod());
-      Span span =
-          tracingContext.tracer.nextSpanWithParent(
-              tracingContext.sampler, request, invocationContext);
+      TracingRequest tracingRequest =
+          new TracingRequest(rpcRequest.getService(), rpcRequest.getMethod());
+      Span span = getClientSpanWithTags(tracingContext, invocationContext, tracingRequest);
+
       if (log.isTraceEnabled()) {
         log.trace("tracing context is created as {}", span);
       }
@@ -134,7 +136,7 @@ public class ClientTracerInterceptor implements RSocketInterceptor {
       try (CurrentTraceContext.Scope scope =
           tracingContext.currentTraceContext.maybeScope(span.context())) {
         tracingContext.mapInjector.inject(span.context(), map);
-        span.kind(Span.Kind.CLIENT).start();
+        span.start();
         if (log.isDebugEnabled()) {
           log.debug("tracing is added to the request metadata with map {}", map);
         }
@@ -165,20 +167,10 @@ public class ClientTracerInterceptor implements RSocketInterceptor {
           }
           return delegate
               .requestResponse(payloadWithTracing)
-              .transform(
-                  TracingUtil.<Payload>scopePassingSpanOperator(
-                      tracingContext.currentTraceContext, span.context()))
-              .doOnNext(
-                  p -> {
-                    if (log.isDebugEnabled()) {
-                      log.debug(
-                          "completed calling the service {} method {} with tracing scope {}",
-                          rpcRequest.getService(),
-                          rpcRequest.getMethod(),
-                          scope);
-                    }
-                  })
-              .doOnError(er -> log.error("error received", er));
+              .transform(getSpanPassingOperator(tracingContext, span))
+              .doOnError(handleError(span))
+              .doFinally(
+                  handleStreamCompletion(rpcRequest.getService(), rpcRequest.getMethod(), span));
         }
       } catch (Throwable e) {
         log.error("error received for tracer interceptor", e);
@@ -197,10 +189,10 @@ public class ClientTracerInterceptor implements RSocketInterceptor {
       }
       TraceContext invocationContext = tracingContext.currentTraceContext.get();
       RsocketRpcRequest rpcRequest = MetaDataUtil.getRpcRequest(payload.metadata());
-      TracingRequest request = new TracingRequest(rpcRequest.getService(), rpcRequest.getMethod());
-      Span span =
-          tracingContext.tracer.nextSpanWithParent(
-              tracingContext.sampler, request, invocationContext);
+      TracingRequest tracingRequest =
+          new TracingRequest(rpcRequest.getService(), rpcRequest.getMethod());
+      Span span = getClientSpanWithTags(tracingContext, invocationContext, tracingRequest);
+
       if (log.isTraceEnabled()) {
         log.trace("tracing context is created as {}", span);
       }
@@ -210,7 +202,7 @@ public class ClientTracerInterceptor implements RSocketInterceptor {
       try (CurrentTraceContext.Scope scope =
           tracingContext.currentTraceContext.maybeScope(span.context())) {
         tracingContext.mapInjector.inject(span.context(), map);
-        span.kind(Span.Kind.CLIENT).start();
+        span.start();
         if (log.isDebugEnabled()) {
           log.debug("tracing is added to the request metadata with map {}", map);
         }
@@ -229,20 +221,10 @@ public class ClientTracerInterceptor implements RSocketInterceptor {
           }
           return delegate
               .requestStream(payloadWithTracing)
-              .transform(
-                  TracingUtil.<Payload>scopePassingSpanOperator(
-                      tracingContext.currentTraceContext, span.context()))
-              .doOnNext(
-                  p -> {
-                    if (log.isDebugEnabled()) {
-                      log.debug(
-                          "completed calling the service {} method {} with tracing scope {}",
-                          rpcRequest.getService(),
-                          rpcRequest.getMethod(),
-                          scope);
-                    }
-                  })
-              .doOnError(er -> log.error("error received", er));
+              .transform(getSpanPassingOperator(tracingContext, span))
+              .doOnError(handleError(span))
+              .doFinally(
+                  handleStreamCompletion(rpcRequest.getService(), rpcRequest.getMethod(), span));
         }
       } catch (Throwable e) {
         log.error("error received for client tracer interceptor", e);
@@ -260,6 +242,7 @@ public class ClientTracerInterceptor implements RSocketInterceptor {
         log.trace("inside the requestStream interceptor");
       }
 
+      AtomicReference<TracingRequest> tracingRequest = new AtomicReference<>();
       Publisher<Payload> payloadWithTracingStream =
           Flux.from(payloads)
               .switchOnFirst(
@@ -275,11 +258,12 @@ public class ClientTracerInterceptor implements RSocketInterceptor {
 
                     TraceContext invocationContext = tracingContext.currentTraceContext.get();
                     RsocketRpcRequest rpcRequest = MetaDataUtil.getRpcRequest(payload.metadata());
-                    TracingRequest request =
-                        new TracingRequest(rpcRequest.getService(), rpcRequest.getMethod());
-                    Span span =
-                        tracingContext.tracer.nextSpanWithParent(
-                            tracingContext.sampler, request, invocationContext);
+                    // INit the tracingRequest
+                    tracingRequest.compareAndSet(
+                        null, getClientTraceRequest(rpcRequest, tracingContext, invocationContext));
+
+                    Span span = tracingRequest.get().getSpan();
+
                     Payload payloadWithTracing = null;
                     try (CurrentTraceContext.Scope scope =
                         tracingContext.currentTraceContext.maybeScope(span.context())) {
@@ -287,7 +271,7 @@ public class ClientTracerInterceptor implements RSocketInterceptor {
                       if (log.isDebugEnabled()) {
                         log.debug("tracing is added to the request metadata with map {}", map);
                       }
-                      span.kind(Span.Kind.CLIENT).start();
+                      span.start();
                       if (log.isTraceEnabled()) {
                         log.trace("tracing context is created as {}", span);
                       }
@@ -304,19 +288,10 @@ public class ClientTracerInterceptor implements RSocketInterceptor {
                           tracingContext.currentTraceContext.maybeScope(span.context())) {
                         return flux.skip(1)
                             .startWith(payloadWithTracing)
-                            .transform(
-                                TracingUtil.<Payload>scopePassingSpanOperator(
-                                    tracingContext.currentTraceContext, span.context()))
-                            .doOnComplete(
-                                () -> {
-                                  if (log.isDebugEnabled()) {
-                                    log.debug(
-                                        "completed calling the service {} method {} with tracing scope {}",
-                                        rpcRequest.getService(),
-                                        rpcRequest.getMethod(),
-                                        scope);
-                                  }
-                                });
+                            .transform(getSpanPassingOperator(tracingContext, span))
+                            .doFinally(
+                                handleStreamCompletion(
+                                    rpcRequest.getService(), rpcRequest.getMethod(), span));
                       }
 
                     } catch (Throwable e) {
@@ -329,18 +304,18 @@ public class ClientTracerInterceptor implements RSocketInterceptor {
 
       return delegate
           .requestChannel(payloadWithTracingStream)
-          // TODO:finish span in doOnError
-          .doOnError(er -> log.error("error received", er));
+          .doOnError(handleError(tracingRequest.get().getSpan()))
+          .doFinally(
+              handleStreamCompletion(
+                  tracingRequest.get().getServiceName(),
+                  tracingRequest.get().getMethodName(),
+                  tracingRequest.get().getSpan()));
     }
 
     @Override
     public Mono<Void> metadataPush(Payload payload) {
-      return null;
-    }
-
-    @Override
-    public Flux<Payload> requestChannel(Payload payload, Publisher<Payload> payloads) {
-      return null;
+      // TODO
+      return delegate.metadataPush(payload);
     }
 
     @Override

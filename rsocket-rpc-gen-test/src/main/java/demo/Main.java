@@ -20,6 +20,10 @@ import io.rsocket.rpc.core.extension.tracing.RSocketTracing;
 import java.util.Collection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reactor.core.publisher.Flux;
+import zipkin2.reporter.Sender;
+import zipkin2.reporter.brave.AsyncZipkinSpanHandler;
+import zipkin2.reporter.okhttp3.OkHttpSender;
 
 // TODO: Move this class to tests
 public class Main {
@@ -29,11 +33,16 @@ public class Main {
   public static void main(String[] args) throws InterruptedException {
     logger.info("starting the sample app");
     //    callRequestResponseWithTracing();
-//     callRequestResponseWithMetrics();
-    callRequestResponseWithTracingAndMetrics();
+    //     callRequestResponseWithMetrics();
+        callRequestResponseWithTracingAndMetrics();
+//    callRequestResponseWithTracingAndZipkin();
+
     //    callFireAndForgetWithTracingAndMetrics();
 
     //    callRequestStreamWithTracingAndMetrics();
+
+    //Only for Zipkin test
+    //Thread.currentThread().join();
 
     logger.info("**End of main***");
   }
@@ -65,7 +74,6 @@ public class Main {
 
     RsocketClientBuilder clientBuilder =
         RsocketClientBuilder.forAddress("localhost", 9090)
-            .withLoadBalancing()
             .withMetrics(simpleClientMeterRegistry)
             .interceptor(RSocketTracing.create(tracing).newClientInterceptor());
 
@@ -100,7 +108,8 @@ public class Main {
         RsocketServerBuilder.forPort(9090)
             .addService(new GreeterImpl())
             .withMetrics(simpleServerMeterRegistry)
-            .interceptor(RSocketTracing.create(tracing).newServerInterceptor())
+            .withTracing(tracing)
+//            .interceptor(RSocketTracing.create(tracing).newServerInterceptor())
             .build()
             .start();
 
@@ -111,9 +120,9 @@ public class Main {
 
     RsocketClientBuilder clientBuilder =
         RsocketClientBuilder.forAddress("localhost", 9090)
-            .withLoadBalancing()
-            .withMetrics(simpleClientMeterRegistry)
-            .interceptor(RSocketTracing.create(tracing).newClientInterceptor());
+            .withTracing(tracing)
+            .withMetrics(simpleClientMeterRegistry);
+//            .interceptor(RSocketTracing.create(tracing).newClientInterceptor());
 
     Span span = tracer.newTrace().name("encode2").start();
     try (CurrentTraceContext.Scope scope =
@@ -121,15 +130,15 @@ public class Main {
       RsocketGreeterStub rsocketGreeterStub = RsocketGreeterRpc.newReactorStub(clientBuilder);
       rsocketGreeterStub
           .greet(HelloRequest.newBuilder().setName("hello").build())
-          .doOnCancel(()->logger.info("upstream is cancelled"))
-          .doOnError(er->logger.error("error received ",er))
+          .doOnCancel(() -> logger.info("upstream is cancelled"))
+          .doOnError(er -> logger.error("error received ", er))
           .doOnNext(r -> logger.info("RequestResponse:response received {}", r.getMessage()))
           .block();
     } finally {
       span.finish();
       server.shutDown();
       printClientMetrics(simpleClientMeterRegistry, "request.greet");
-      printServerMetrics(simpleServerMeterRegistry,"request.greet");
+      printServerMetrics(simpleServerMeterRegistry, "request.greet");
     }
   }
 
@@ -238,7 +247,7 @@ public class Main {
 
     RsocketClientBuilder rsocketClientBuilder =
         RsocketClientBuilder.forAddress("localhost", 9091)
-//            .withLoadBalancing()
+            //            .withLoadBalancing()
             .withMetrics(simpleClientMeterRegistry);
 
     RsocketGreeterStub rsocketGreeterStub = RsocketGreeterRpc.newReactorStub(rsocketClientBuilder);
@@ -250,7 +259,7 @@ public class Main {
           .block();
     } finally {
       printClientMetrics(simpleClientMeterRegistry, "request.greet");
-      printServerMetrics(simpleServerMeterRegistry,"request.greet");
+      printServerMetrics(simpleServerMeterRegistry, "request.greet");
       server.shutDown();
     }
   }
@@ -290,6 +299,65 @@ public class Main {
           .greet(HelloRequest.newBuilder().setName("hello").build())
           .doOnNext(r -> logger.info("RequestResponse:response received {}", r.getMessage()))
           .block();
+    } finally {
+      span.finish();
+      server.shutDown();
+    }
+  }
+
+  // with zipkin
+  private static void callRequestResponseWithTracingAndZipkin() throws InterruptedException {
+    // First let's initialize the zipkin endpoint
+    Sender okHttpSender = OkHttpSender.create("http://127.0.0.1:9411/api/v2/spans");
+
+    Tracing serverTracing =
+        Tracing.newBuilder()
+            .currentTraceContext(
+                ThreadLocalCurrentTraceContext.newBuilder()
+                    .addScopeDecorator(MDCScopeDecorator.get())
+                    .build())
+            .localServiceName("test-service")
+            .addSpanHandler(AsyncZipkinSpanHandler.create(okHttpSender))
+            .build();
+    //    Span span = tracer.newTrace().name("server-start").start();
+    RpcServer server =
+        RsocketServerBuilder.forPort(9090)
+            .addService(new GreeterImpl())
+            .interceptor(RSocketTracing.create(serverTracing).newServerInterceptor())
+            .build()
+            .start();
+
+    logger.info("server started in port 9090");
+    server.awaitTermination();
+
+    Tracing clientTracing =
+        Tracing.newBuilder()
+            .currentTraceContext(
+                ThreadLocalCurrentTraceContext.newBuilder()
+                    .addScopeDecorator(MDCScopeDecorator.get())
+                    .build())
+            .localServiceName("test-service-client")
+            .addSpanHandler(AsyncZipkinSpanHandler.create(okHttpSender))
+            .build();
+
+    RpcClient simpleClient =
+        RsocketClientBuilder.forAddress("localhost", 9090)
+            .interceptor(RSocketTracing.create(clientTracing).newClientInterceptor())
+            .build();
+
+    Span span = clientTracing.tracer().newTrace().name("client-tracer").start();
+
+    try (CurrentTraceContext.Scope scope =
+        serverTracing.currentTraceContext().maybeScope(span.context())) {
+      RsocketGreeterStub rsocketGreeterStub = RsocketGreeterRpc.newReactorStub(simpleClient);
+      Flux.range(1, 100)
+          .flatMap(
+              i ->
+                  rsocketGreeterStub
+                      .greet(HelloRequest.newBuilder().setName("hello-" + i).build())
+                      .doOnNext(
+                          r -> logger.info("RequestResponse:response received {}", r.getMessage())))
+          .blockLast();
     } finally {
       span.finish();
       server.shutDown();

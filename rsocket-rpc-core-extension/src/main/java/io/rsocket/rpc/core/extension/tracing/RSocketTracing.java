@@ -1,6 +1,7 @@
 package io.rsocket.rpc.core.extension.tracing;
 
 import brave.Tracing;
+import brave.rpc.RpcClientHandler;
 import brave.rpc.RpcTracing;
 import io.rsocket.plugins.RSocketInterceptor;
 
@@ -52,4 +53,5 @@ public class RSocketTracing {
   public RSocketInterceptor newServerInterceptor() {
     return new ServerTracerInterceptor(this);
   }
+
 }
