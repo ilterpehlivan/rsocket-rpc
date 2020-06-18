@@ -190,6 +190,7 @@ public class TracingUtil {
             tracingContext.sampler, tracingRequest, invocationContext);
     span.tag(TAG_RPC_SERVICE_NAME, tracingRequest.getServiceName());
     span.tag(TAG_RPC_METHOD_TYPE, tracingRequest.getMethodName());
+    span.name(tracingRequest.getServiceName() + ":" + tracingRequest.getMethodName());
 
     Span clientSpan = span.kind(Kind.CLIENT);
     return clientSpan;
@@ -213,7 +214,7 @@ public class TracingUtil {
       final TracingContext tracingContext) {
     TracingRequest tracingRequest =
         new TracingRequest(rpcRequest.getService(), rpcRequest.getMethod());
-    Span span = getServerSpanWithTags(extractedContex,rpcRequest,tracingContext);
+    Span span = getServerSpanWithTags(extractedContex, rpcRequest, tracingContext);
     tracingRequest.setSpan(span);
     return tracingRequest;
   }
@@ -225,6 +226,7 @@ public class TracingUtil {
     Span span = nextSpan(extractedContex, tracingContext);
     span.tag(TAG_RPC_SERVICE_NAME, rpcRequest.getService());
     span.tag(TAG_RPC_METHOD_TYPE, rpcRequest.getMethod());
+    span.name(rpcRequest.getService() + ":" + rpcRequest.getMethod());
     return span.kind(Kind.SERVER);
   }
 

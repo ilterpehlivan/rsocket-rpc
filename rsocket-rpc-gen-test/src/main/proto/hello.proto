@@ -13,6 +13,7 @@ option java_outer_classname = "HelloWorldProto";
  */
 service Greeter {
   rpc Greet (HelloRequest) returns (HelloResponse) {}
+  rpc GreetAgain (HelloRequest) returns (HelloResponse) {}
   rpc GreetAndForget(HelloRequest) returns (google.protobuf.Empty){}
   rpc MultiGreet (HelloRequest) returns (stream HelloResponse) {}
   rpc StreamGreet (stream HelloRequest) returns (stream HelloResponse) {}

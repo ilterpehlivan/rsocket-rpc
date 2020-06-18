@@ -31,10 +31,12 @@ public class RpcTag implements Tag {
     this.rpcTagValue = rpcTagValue;
   }
 
+  // Tag -> [ Actual Method: RsocketType ]
+  // Example: [greet : requestReply]
   public static Tag[] getClientTags(String serviceName, Map<String, String> methodMapping) {
     List<RpcTag> rpcTags =
         methodMapping.entrySet().stream()
-            .map(e -> new RpcTag(e.getKey(), REQUEST_KEY + e.getValue()))
+            .map(e -> new RpcTag(REQUEST_KEY + e.getValue(), e.getKey()))
             .collect(Collectors.toList());
 
     rpcTags.add(new RpcTag(SERVICE_NAME_KEY, serviceName));
@@ -45,7 +47,7 @@ public class RpcTag implements Tag {
   public static Tag[] getServerTags(String serviceName, Map<String, String> methodMapping) {
     List<RpcTag> rpcTags =
         methodMapping.entrySet().stream()
-            .map(e -> new RpcTag(e.getKey(), REQUEST_KEY + e.getValue()))
+            .map(e -> new RpcTag(REQUEST_KEY + e.getValue(),e.getKey()))
             .collect(Collectors.toList());
 
     rpcTags.add(new RpcTag(SERVICE_NAME_KEY, serviceName));

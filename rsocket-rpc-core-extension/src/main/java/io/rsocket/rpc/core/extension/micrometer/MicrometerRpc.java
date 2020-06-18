@@ -66,21 +66,23 @@ public class MicrometerRpc implements RSocket {
     this.metadataPush = new InteractionCounters(meterRegistry, "metadata.push", tags);
   }
 
+  // Tag : [Method Name: RsocketRpcName]
+  //Example: [request.greet: rpc.method.requestReply]
   private InteractionCounters getFireAndForgetCounter(MeterRegistry meterRegistry, Tag[] tags) {
     String counterName =
         Arrays.stream(tags)
             .filter(
                 tag ->
-                    SchemaDescriptor.getRsocketTypeFromRpcMethod(tag.getKey())
+                    SchemaDescriptor.getRsocketTypeFromRpcMethod(tag.getValue())
                             .compareTo(FIRE_FORGET)
                         == 0)
             .findFirst()
-            .map(Tag::getValue)
+            .map(Tag::getKey)
             .orElse(FIRE_FORGET.getName());
 
     List<Tag> filteredTags =
         Arrays.stream(tags)
-            .filter(tag -> !(tag.getKey().contains(RPC_METHOD_KEY)))
+            .filter(tag -> !(tag.getValue().contains(RPC_METHOD_KEY)))
             .collect(Collectors.toList());
     filteredTags.add(new RpcTag(RSOCKET_METHOD_KEY, FIRE_FORGET.getName()));
     return new InteractionCounters(meterRegistry, counterName, filteredTags.toArray(new Tag[0]));
@@ -91,18 +93,18 @@ public class MicrometerRpc implements RSocket {
         Arrays.stream(tags)
             .filter(
                 tag ->
-                    SchemaDescriptor.getRsocketTypeFromRpcMethod(tag.getKey())
+                    SchemaDescriptor.getRsocketTypeFromRpcMethod(tag.getValue())
                             .compareTo(REQUEST_REPLY)
                         == 0)
             .findFirst()
-            .map(Tag::getValue)
+            .map(Tag::getKey)
             .orElse(
                 SchemaDescriptor.getRpcMethod(
                     REQUEST_REPLY.getName())); // if not found default rpc.method.requestReply
     List<Tag> filteredTags =
         Arrays.stream(tags)
             .filter(
-                tag -> !(tag.getKey().contains(RPC_METHOD_KEY))
+                tag -> !(tag.getValue().contains(RPC_METHOD_KEY))
                 //                        ||
                 // SchemaDescriptor.getRsocketTypeFromRpcMethod(tag.getKey())
                 //                                .compareTo(REQUEST_REPLY)
@@ -119,16 +121,16 @@ public class MicrometerRpc implements RSocket {
         Arrays.stream(tags)
             .filter(
                 tag ->
-                    SchemaDescriptor.getRsocketTypeFromRpcMethod(tag.getKey())
+                    SchemaDescriptor.getRsocketTypeFromRpcMethod(tag.getValue())
                             .compareTo(REQUEST_CHANNEL)
                         == 0)
             .findFirst()
-            .map(Tag::getValue)
+            .map(Tag::getKey)
             .orElse(REQUEST_CHANNEL.getName());
 
     List<Tag> filteredTags =
         Arrays.stream(tags)
-            .filter(tag -> !(tag.getKey().contains(RPC_METHOD_KEY)))
+            .filter(tag -> !(tag.getValue().contains(RPC_METHOD_KEY)))
             .collect(Collectors.toList());
     filteredTags.add(new RpcTag(RSOCKET_METHOD_KEY, REQUEST_CHANNEL.getName()));
     return new InteractionCounters(meterRegistry, counterName, filteredTags.toArray(new Tag[0]));
@@ -139,16 +141,16 @@ public class MicrometerRpc implements RSocket {
         Arrays.stream(tags)
             .filter(
                 tag ->
-                    SchemaDescriptor.getRsocketTypeFromRpcMethod(tag.getKey())
+                    SchemaDescriptor.getRsocketTypeFromRpcMethod(tag.getValue())
                             .compareTo(REQUEST_STREAM)
                         == 0)
             .findFirst()
-            .map(Tag::getValue)
+            .map(Tag::getKey)
             .orElse(REQUEST_STREAM.getName());
 
     List<Tag> filteredTags =
         Arrays.stream(tags)
-            .filter(tag -> !(tag.getKey().contains(RPC_METHOD_KEY)))
+            .filter(tag -> !(tag.getValue().contains(RPC_METHOD_KEY)))
             .collect(Collectors.toList());
     filteredTags.add(new RpcTag(RSOCKET_METHOD_KEY, REQUEST_STREAM.getName()));
     return new InteractionCounters(meterRegistry, counterName, filteredTags.toArray(new Tag[0]));

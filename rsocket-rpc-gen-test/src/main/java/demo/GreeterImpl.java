@@ -24,6 +24,14 @@ public class GreeterImpl implements RsocketGreeterRpc.GreeterImplBase {
   }
 
   @Override
+  public Mono<HelloResponse> greetAgain(HelloRequest request, ByteBuf metadata) {
+    logger.info("Inside the greetAgain function");
+    return Mono.just(
+        HelloResponse.newBuilder().setMessage("hello response again:" + request.getName()).build())
+        .doOnNext(helloResponse -> logger.info("replying back result again {}",helloResponse.getMessage()));
+  }
+
+  @Override
   public Mono<Empty> greetAndForget(HelloRequest request, ByteBuf metadata) {
     logger.info("inside the greetAndForget service impl");
     return Mono.empty();

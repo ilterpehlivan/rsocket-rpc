@@ -138,7 +138,7 @@ public final class {{className}} {
     private static final Map<String, String> methods =
       ImmutableMap.<String, String>builder()
           {{#methods}}
-          .put(io.rsocket.rpc.core.extension.routing.SchemaDescriptor.getRpcMethod("{{reactiveCallsMethodName}}"), "{{methodName}}")
+          .put("{{methodName}}", io.rsocket.rpc.core.extension.routing.SchemaDescriptor.getRpcMethod("{{reactiveCallsMethodName}}"))
           {{/methods}}
           .build();
 

@@ -29,20 +29,21 @@ import zipkin2.reporter.okhttp3.OkHttpSender;
 public class Main {
 
   private static Logger logger = LoggerFactory.getLogger(Main.class);
+  private static ThreadLocalCurrentTraceContext currentTraceContext = null;
 
   public static void main(String[] args) throws InterruptedException {
     logger.info("starting the sample app");
-    //    callRequestResponseWithTracing();
+    //callRequestResponseWithTracing();
     //     callRequestResponseWithMetrics();
-        callRequestResponseWithTracingAndMetrics();
-//    callRequestResponseWithTracingAndZipkin();
+            callRequestResponseWithTracingAndMetrics();
+    //    callRequestResponseWithTracingAndZipkin();
 
     //    callFireAndForgetWithTracingAndMetrics();
 
     //    callRequestStreamWithTracingAndMetrics();
 
-    //Only for Zipkin test
-    //Thread.currentThread().join();
+    // Only for Zipkin test
+    // Thread.currentThread().join();
 
     logger.info("**End of main***");
   }
@@ -109,7 +110,7 @@ public class Main {
             .addService(new GreeterImpl())
             .withMetrics(simpleServerMeterRegistry)
             .withTracing(tracing)
-//            .interceptor(RSocketTracing.create(tracing).newServerInterceptor())
+            //            .interceptor(RSocketTracing.create(tracing).newServerInterceptor())
             .build()
             .start();
 
@@ -122,7 +123,7 @@ public class Main {
         RsocketClientBuilder.forAddress("localhost", 9090)
             .withTracing(tracing)
             .withMetrics(simpleClientMeterRegistry);
-//            .interceptor(RSocketTracing.create(tracing).newClientInterceptor());
+    //            .interceptor(RSocketTracing.create(tracing).newClientInterceptor());
 
     Span span = tracer.newTrace().name("encode2").start();
     try (CurrentTraceContext.Scope scope =
@@ -265,20 +266,14 @@ public class Main {
   }
 
   private static void callRequestResponseWithTracing() throws InterruptedException {
-    Tracing tracing =
-        Tracing.newBuilder()
-            .currentTraceContext(
-                ThreadLocalCurrentTraceContext.newBuilder()
-                    .addScopeDecorator(MDCScopeDecorator.create())
-                    .build())
-            .localServiceName("test-service")
-            .build();
-    Tracer tracer = tracing.tracer();
+    String localServiceName = "MAIN";
+    Tracing mainTracing = createTracing(localServiceName);
+    Tracer tracer = mainTracing.tracer();
     //    Span span = tracer.newTrace().name("server-start").start();
     RpcServer server =
         RsocketServerBuilder.forPort(9090)
             .addService(new GreeterImpl())
-            .interceptor(RSocketTracing.create(tracing).newServerInterceptor())
+            .interceptor(RSocketTracing.create(mainTracing).newServerInterceptor())
             .build()
             .start();
 
@@ -286,14 +281,11 @@ public class Main {
     server.awaitTermination();
 
     RpcClient simpleClient =
-        RsocketClientBuilder.forAddress("localhost", 9090)
-            .withLoadBalancing()
-            .interceptor(RSocketTracing.create(tracing).newClientInterceptor())
-            .build();
+        RsocketClientBuilder.forAddress("localhost", 9090).withTracing(mainTracing).build();
 
-    Span span = tracer.newTrace().name("encode2").start();
+    Span span = tracer.newTrace().name("main").start();
     try (CurrentTraceContext.Scope scope =
-        tracing.currentTraceContext().maybeScope(span.context())) {
+        mainTracing.currentTraceContext().maybeScope(span.context())) {
       RsocketGreeterStub rsocketGreeterStub = RsocketGreeterRpc.newReactorStub(simpleClient);
       rsocketGreeterStub
           .greet(HelloRequest.newBuilder().setName("hello").build())
@@ -303,6 +295,23 @@ public class Main {
       span.finish();
       server.shutDown();
     }
+  }
+
+  private static Tracing createTracing(String localServiceName) {
+    return Tracing.newBuilder()
+        .currentTraceContext(createTracingContext())
+        .localServiceName(localServiceName)
+        .build();
+  }
+
+  private static ThreadLocalCurrentTraceContext createTracingContext() {
+    if (currentTraceContext == null) {
+      currentTraceContext =
+          ThreadLocalCurrentTraceContext.newBuilder()
+              .addScopeDecorator(MDCScopeDecorator.get())
+              .build();
+    }
+    return currentTraceContext;
   }
 
   // with zipkin
