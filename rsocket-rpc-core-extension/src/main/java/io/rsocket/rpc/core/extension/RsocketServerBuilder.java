@@ -115,8 +115,8 @@ public final class RsocketServerBuilder {
               ((SchemaDescriptor) method.getMethodDescriptor().getSchemaDescriptor())
                   .getRpcMethodName();
           methodMapping.put(
-              rpcMethodName,
-              ((SchemaDescriptor) method.getMethodDescriptor().getSchemaDescriptor()).getMethod());
+              ((SchemaDescriptor) method.getMethodDescriptor().getSchemaDescriptor()).getMethod(),
+              rpcMethodName);
         });
     return methodMapping;
   }

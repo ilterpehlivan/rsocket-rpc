@@ -79,6 +79,16 @@ public class RsocketClientBuilder {
     return this;
   }
 
+  /**
+   * Enable reconnecting with default retry values
+   *
+   * @return
+   */
+  public RsocketClientBuilder withRetry() {
+    this.enableReconnect = true;
+    return this;
+  }
+
   public RsocketClientBuilder interceptors(RSocketInterceptor... interceptors) {
     for (RSocketInterceptor interceptor : interceptors) {
       this.interceptor(interceptor);

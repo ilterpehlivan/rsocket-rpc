@@ -67,7 +67,7 @@ public class MicrometerRpc implements RSocket {
   }
 
   // Tag : [Method Name: RsocketRpcName]
-  //Example: [request.greet: rpc.method.requestReply]
+  //Example: [request.greet: rpc.method.requestReply]  then counterName=request.greet
   private InteractionCounters getFireAndForgetCounter(MeterRegistry meterRegistry, Tag[] tags) {
     String counterName =
         Arrays.stream(tags)

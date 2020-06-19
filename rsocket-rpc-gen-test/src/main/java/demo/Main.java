@@ -10,6 +10,8 @@ import demo.proto.HelloRequest;
 import demo.proto.RsocketGreeterRpc;
 import demo.proto.RsocketGreeterRpc.RsocketGreeterStub;
 import io.micrometer.core.instrument.Meter;
+import io.micrometer.core.instrument.Tag;
+import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.search.Search;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.rsocket.rpc.core.extension.RpcClient;
@@ -18,6 +20,9 @@ import io.rsocket.rpc.core.extension.RsocketClientBuilder;
 import io.rsocket.rpc.core.extension.RsocketServerBuilder;
 import io.rsocket.rpc.core.extension.tracing.RSocketTracing;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
@@ -28,14 +33,15 @@ import zipkin2.reporter.okhttp3.OkHttpSender;
 // TODO: Move this class to tests
 public class Main {
 
+  public static final int PORT = 9099;
   private static Logger logger = LoggerFactory.getLogger(Main.class);
   private static ThreadLocalCurrentTraceContext currentTraceContext = null;
 
   public static void main(String[] args) throws InterruptedException {
     logger.info("starting the sample app");
-    //callRequestResponseWithTracing();
-    //     callRequestResponseWithMetrics();
-            callRequestResponseWithTracingAndMetrics();
+    //    callRequestResponseWithTracing();
+//    callRequestResponseWithMetrics();
+                callRequestResponseWithTracingAndMetrics();
     //    callRequestResponseWithTracingAndZipkin();
 
     //    callFireAndForgetWithTracingAndMetrics();
@@ -236,18 +242,18 @@ public class Main {
     logger.info("Starting the callRequestResponseWithMetrics");
     SimpleMeterRegistry simpleServerMeterRegistry = new SimpleMeterRegistry();
     RpcServer server =
-        RsocketServerBuilder.forPort(9091)
+        RsocketServerBuilder.forPort(PORT)
             .withMetrics(simpleServerMeterRegistry)
             .addService(new GreeterImpl())
             .build()
             .start();
-    logger.info("server started in port 9091");
+    logger.info("server started in port {}", PORT);
     server.awaitTermination();
 
     SimpleMeterRegistry simpleClientMeterRegistry = new SimpleMeterRegistry();
 
     RsocketClientBuilder rsocketClientBuilder =
-        RsocketClientBuilder.forAddress("localhost", 9091)
+        RsocketClientBuilder.forAddress("localhost", PORT)
             //            .withLoadBalancing()
             .withMetrics(simpleClientMeterRegistry);
 
@@ -259,40 +265,78 @@ public class Main {
           .doOnNext(r -> logger.info("RequestResponse:response received {}", r.getMessage()))
           .block();
     } finally {
-      printClientMetrics(simpleClientMeterRegistry, "request.greet");
-      printServerMetrics(simpleServerMeterRegistry, "request.greet");
+      // printClientMetrics(simpleClientMeterRegistry, "request.greet");
+      // printServerMetrics(simpleServerMeterRegistry, "request.greet");
+//      printClientMetrics(simpleClientMeterRegistry);
+//      printServerMetrics(simpleServerMeterRegistry);
+      validateMetrics(simpleClientMeterRegistry);
+      validateMetrics(simpleServerMeterRegistry);
       server.shutDown();
     }
+  }
+
+  // This function is validating if same metrics-ids have same tags
+  private static void validateMetrics(SimpleMeterRegistry simpleClientMeterRegistry) {
+    Map<String, List<Tag>> meterMap = new HashMap<>();
+    simpleClientMeterRegistry.forEachMeter(
+        meter -> {
+          logger.info("validating the tag {}", meter.getId().getName());
+          if (meterMap.containsKey(meter.getId().getName())) {
+            // compare tags
+            logger.info("already existing meter id");
+            if (!(meter.getId().getTags().size() == meterMap.get(meter.getId().getName()).size())) {
+              logger.warn("**meter tag sizes are not same for meter {}", meter.getId());
+              throw new RuntimeException("two same metrics size not same");
+            }
+            if (!meter.getId().getTags().stream()
+                .allMatch(
+                    tag ->
+                        meterMap.get(meter.getId().getName()).stream()
+                            .anyMatch(tagElement -> {
+                              logger.info("checking tag {} from registry with in map {} ",tag.getKey(),tagElement.getKey());
+                              return tagElement.getKey().equals(tag.getKey());
+                            }))) {
+              logger.warn("**meter tags are not identical meter {}", meter.getId());
+              throw new RuntimeException("two same metrics tags not identical");
+            }
+
+          } else {
+            // add it to
+            logger.info("this meter id is new adding to list");
+            meterMap.put(meter.getId().getName(), meter.getId().getTags());
+          }
+        });
   }
 
   private static void callRequestResponseWithTracing() throws InterruptedException {
     String localServiceName = "MAIN";
     Tracing mainTracing = createTracing(localServiceName);
+    Tracing serverTracing = createTracing("server");
     Tracer tracer = mainTracing.tracer();
     //    Span span = tracer.newTrace().name("server-start").start();
     RpcServer server =
         RsocketServerBuilder.forPort(9090)
             .addService(new GreeterImpl())
-            .interceptor(RSocketTracing.create(mainTracing).newServerInterceptor())
+            .withTracing(serverTracing)
             .build()
             .start();
 
     logger.info("server started in port 9090");
     server.awaitTermination();
 
-    RpcClient simpleClient =
-        RsocketClientBuilder.forAddress("localhost", 9090).withTracing(mainTracing).build();
-
-    Span span = tracer.newTrace().name("main").start();
-    try (CurrentTraceContext.Scope scope =
-        mainTracing.currentTraceContext().maybeScope(span.context())) {
+    Span mainSpan = tracer.nextSpan().name("main");
+    try (Tracer.SpanInScope ws = tracer.withSpanInScope(mainSpan.start())) {
+      logger.info("main span is started,setting the client first");
+      RpcClient simpleClient =
+          RsocketClientBuilder.forAddress("localhost", 9090).withTracing(mainTracing).build();
       RsocketGreeterStub rsocketGreeterStub = RsocketGreeterRpc.newReactorStub(simpleClient);
+      logger.info("calling the remote service");
       rsocketGreeterStub
           .greet(HelloRequest.newBuilder().setName("hello").build())
           .doOnNext(r -> logger.info("RequestResponse:response received {}", r.getMessage()))
           .block();
     } finally {
-      span.finish();
+      mainSpan.finish();
       server.shutDown();
     }
   }

@@ -36,7 +36,7 @@ public class RpcTag implements Tag {
   public static Tag[] getClientTags(String serviceName, Map<String, String> methodMapping) {
     List<RpcTag> rpcTags =
         methodMapping.entrySet().stream()
-            .map(e -> new RpcTag(REQUEST_KEY + e.getValue(), e.getKey()))
+            .map(e -> new RpcTag(REQUEST_KEY + e.getKey(), e.getValue()))
             .collect(Collectors.toList());
 
     rpcTags.add(new RpcTag(SERVICE_NAME_KEY, serviceName));
@@ -47,7 +47,7 @@ public class RpcTag implements Tag {
   public static Tag[] getServerTags(String serviceName, Map<String, String> methodMapping) {
     List<RpcTag> rpcTags =
         methodMapping.entrySet().stream()
-            .map(e -> new RpcTag(REQUEST_KEY + e.getValue(),e.getKey()))
+            .map(e -> new RpcTag(REQUEST_KEY + e.getKey(), e.getValue()))
             .collect(Collectors.toList());
 
     rpcTags.add(new RpcTag(SERVICE_NAME_KEY, serviceName));

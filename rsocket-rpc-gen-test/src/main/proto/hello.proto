@@ -16,6 +16,7 @@ service Greeter {
   rpc GreetAgain (HelloRequest) returns (HelloResponse) {}
   rpc GreetAndForget(HelloRequest) returns (google.protobuf.Empty){}
   rpc MultiGreet (HelloRequest) returns (stream HelloResponse) {}
+  rpc MultiGreetAgain (HelloRequest) returns (stream HelloResponse) {}
   rpc StreamGreet (stream HelloRequest) returns (stream HelloResponse) {}
 }
 

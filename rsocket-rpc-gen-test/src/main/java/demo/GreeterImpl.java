@@ -57,6 +57,25 @@ public class GreeterImpl implements RsocketGreeterRpc.GreeterImplBase {
   }
 
   @Override
+  public Flux<HelloResponse> multiGreetAgain(HelloRequest request, ByteBuf metadata) {
+    logger.info("inside the multiGreet again service implementation");
+    return Flux.<HelloResponse>create(
+        emmiter -> {
+          for (int i = 0; i < 10; i++)
+            emmiter.next(HelloResponse.newBuilder().setMessage("hello" + i).build());
+          emmiter.complete();
+        })
+        .doOnNext(e -> logger.info("emmiting {}" , e.getMessage()))
+        .doFinally(
+            signalType -> logger.info("server doOnFinally signal {}" ,signalType.toString()))
+        .doOnError(er -> logger.info("error in server impl {}", er.getMessage()))
+        .doOnCancel(
+            () -> {
+              logger.info("server inside the doCancel");
+            });
+  }
+
+  @Override
   public Flux<HelloResponse> streamGreet(Flux<HelloRequest> request, ByteBuf metadata) {
     return Flux.create(
         emmiter -> {
