@@ -13,8 +13,22 @@ public class RpcClient {
   public static final int TIMEOUT = 3;
   private final Mono<RSocket> rSocketMono;
 
-  protected RpcClient(Mono<RSocket> rSocketMono) {
-    this.rSocketMono = rSocketMono;
+  protected RpcClient(Mono<RSocket> rSocketMono, String serviceAddress) {
+    this.rSocketMono =
+        rSocketMono
+            .doOnError(
+                e ->
+                    // TODO:add error counter from micrometer to count the connection errors as
+                    // metrics rpc.connection.counter
+                    log.error(
+                        "Error received while connecting {} {}", serviceAddress, e.getMessage()))
+            .doOnSuccess(
+                (reactSocket) -> {
+                  if (log.isDebugEnabled()) {
+                    log.info("connected to {} successfully", serviceAddress);
+                  }
+                })
+            .doOnSubscribe(s -> log.info("trying to connect service {} ", serviceAddress));
   }
 
   protected RpcClient(Mono<RSocket> rSocketMono, CountDownLatch rsocketInit) {
@@ -30,5 +44,4 @@ public class RpcClient {
   public Mono<RSocket> getrSocketMono() {
     return rSocketMono;
   }
-
 }

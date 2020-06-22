@@ -5,7 +5,6 @@ import com.google.protobuf.Empty;
 import com.google.protobuf.MessageLite;
 import com.google.protobuf.Parser;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufUtil;
 import io.rsocket.Payload;
 import io.rsocket.RSocket;
 import io.rsocket.rpc.core.extension.metadata.MetaDataUtil;
@@ -48,8 +47,7 @@ public final class ClientCalls {
                     return rSocketMono.flatMap(
                         rSocket ->
                             rSocket.requestResponse(
-                                ByteBufPayload.create(
-                                    message.toByteArray(), ByteBufUtil.getBytes(metadataBuf))));
+                                ByteBufPayload.create(proto2ByteBuf(message), metadataBuf)));
                   })
           .map(deserializer(responseParser));
     } catch (Throwable throwable) {
@@ -76,8 +74,7 @@ public final class ClientCalls {
                     return rSocketMono.flatMap(
                         rSocket ->
                             rSocket.fireAndForget(
-                                ByteBufPayload.create(
-                                    message.toByteArray(), ByteBufUtil.getBytes(metadataBuf))));
+                                ByteBufPayload.create(proto2ByteBuf(message), metadataBuf)));
                   })
           .thenReturn(Empty.getDefaultInstance());
     } catch (Throwable throwable) {
@@ -107,8 +104,7 @@ public final class ClientCalls {
                     return rSocketMono.flatMapMany(
                         rSocket ->
                             rSocket.requestStream(
-                                ByteBufPayload.create(
-                                    message.toByteArray(), ByteBufUtil.getBytes(metadataBuf))));
+                                ByteBufPayload.create(proto2ByteBuf(message), metadataBuf)));
                   })
           .map(deserializer(responseParser));
     } catch (Throwable throwable) {
@@ -142,7 +138,7 @@ public final class ClientCalls {
                                             serviceName, methodName, metadata);
                                     metadata.release();
                                     return ByteBufPayload.create(
-                                        message.toByteArray(), ByteBufUtil.getBytes(metadataBuf));
+                                        proto2ByteBuf(message), metadataBuf);
                                   } else {
                                     return ByteBufPayload.create(message.toByteArray());
                                   }
@@ -164,6 +160,21 @@ public final class ClientCalls {
           String methodName,
           final Parser<TResponse> responseParser) {
     throw new UnsupportedOperationException();
+  }
+
+  private static io.netty.buffer.ByteBuf proto2ByteBuf(
+      final com.google.protobuf.MessageLite message) {
+    int length = message.getSerializedSize();
+    io.netty.buffer.ByteBuf byteBuf = io.netty.buffer.ByteBufAllocator.DEFAULT.buffer(length);
+    try {
+      message.writeTo(
+          com.google.protobuf.CodedOutputStream.newInstance(byteBuf.internalNioBuffer(0, length)));
+      byteBuf.writerIndex(length);
+      return byteBuf;
+    } catch (Throwable t) {
+      byteBuf.release();
+      throw new RuntimeException(t);
+    }
   }
 
   private static <T> Function<Payload, T> deserializer(final Parser<T> parser) {

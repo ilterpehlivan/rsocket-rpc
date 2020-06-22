@@ -150,30 +150,13 @@ public class RsocketClientBuilder {
               .doBeforeRetry(rs -> log.warn("Retrying to connect, failed with signal {}", rs)));
     }
 
+
     // It is needed for Loadbalanced case as it takes time
     CountDownLatch rsocketInit = new CountDownLatch(1);
     Mono<RSocket> rSocketMono =
         rSocketConnector
             .payloadDecoder(PayloadDecoder.ZERO_COPY)
-            .connect(TcpClientTransport.create(serviceAdress, servicePort))
-            .doOnError(
-                e ->
-                    // TODO:add error counter from micrometer to count the connection errors as
-                    // metrics rpc.connection.counter
-                    log.error(
-                        "Error received while connecting {} {}",
-                        getServiceAdress(),
-                        e.getMessage()))
-            .doOnSuccess(
-                (reactSocket) -> {
-                  if (log.isDebugEnabled()) {
-                    log.info("connected to {} successfully", getServiceAdress());
-                  }
-                  rsocketInit.countDown();
-                })
-            .doOnSubscribe(s -> log.info("trying to connect service {} ", getServiceAdress()));
-
-    log.info("got a socket");
+            .connect(TcpClientTransport.create(serviceAdress, servicePort));
 
     if (isLoadbalanced) {
       LoadBalancedRSocketMono loadBalancedRSocketMono =
@@ -194,7 +177,7 @@ public class RsocketClientBuilder {
       RpcClient rpcClient = new RpcClient(loadBalancedRSocketMono, rsocketInit);
       return rpcClient;
     } else {
-      RpcClient rpcClient = new RpcClient(rSocketMono);
+      RpcClient rpcClient = new RpcClient(rSocketMono, getServiceAdress());
       return rpcClient;
     }
   }

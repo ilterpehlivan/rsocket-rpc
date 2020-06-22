@@ -70,9 +70,13 @@ public class RSocketCompositeMetadata implements MetadataAware {
 
   @Override
   public void load(ByteBuf byteBuf) {
-    CompositeMetadata compositeMetadata = new CompositeMetadata(byteBuf, true);
-    for (CompositeMetadata.Entry entry : compositeMetadata) {
-      metadataStore.put(entry.getMimeType(), entry.getContent());
+    try {
+      CompositeMetadata compositeMetadata = new CompositeMetadata(byteBuf, true);
+      for (CompositeMetadata.Entry entry : compositeMetadata) {
+        metadataStore.put(entry.getMimeType(), entry.getContent());
+      }
+    } finally {
+      byteBuf.release();
     }
   }
 

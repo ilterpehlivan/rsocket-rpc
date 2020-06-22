@@ -36,7 +36,7 @@ public class MicrometerRpc implements RSocket {
 
   private final RSocket delegate;
 
-  private final InteractionCounters metadataPush;
+  //  private final InteractionCounters metadataPush;
 
   private final InteractionCounters requestChannel;
 
@@ -63,11 +63,11 @@ public class MicrometerRpc implements RSocket {
     this.requestFireAndForget = getFireAndForgetCounter(meterRegistry, tags);
     this.requestStream = getReqStreamCounter(meterRegistry, tags);
     // TODO: metadataPush
-    this.metadataPush = new InteractionCounters(meterRegistry, "metadata.push", tags);
+    //    this.metadataPush = new InteractionCounters(meterRegistry, "metadata.push", tags);
   }
 
   // Tag : [Method Name: RsocketRpcName]
-  //Example: [request.greet: rpc.method.requestReply]  then counterName=request.greet
+  // Example: [request.greet: rpc.method.requestReply]  then counterName=request.greet
   private InteractionCounters getFireAndForgetCounter(MeterRegistry meterRegistry, Tag[] tags) {
     String counterName =
         Arrays.stream(tags)
@@ -168,7 +168,8 @@ public class MicrometerRpc implements RSocket {
 
   @Override
   public Mono<Void> metadataPush(Payload payload) {
-    return delegate.metadataPush(payload).doFinally(metadataPush);
+    // TODO:not supported just pass-through
+    return delegate.metadataPush(payload);
   }
 
   @Override
@@ -214,8 +215,11 @@ public class MicrometerRpc implements RSocket {
 
     @Override
     public void accept(SignalType signalType) {
-      if (log.isTraceEnabled()){
-        log.trace("increasing the counter {} for signaltype {}",this.onComplete.getId().getName(),signalType);
+      if (log.isTraceEnabled()) {
+        log.trace(
+            "increasing the counter {} for signaltype {}",
+            this.onComplete.getId().getName(),
+            signalType);
       }
       switch (signalType) {
         case CANCEL:
@@ -258,8 +262,11 @@ public class MicrometerRpc implements RSocket {
 
     @Override
     public void accept(Sample sample, SignalType signalType) {
-      if (log.isTraceEnabled()){
-        log.trace("sampling the timer {} for signaltype {}",this.onComplete.getId().getName(),signalType);
+      if (log.isTraceEnabled()) {
+        log.trace(
+            "sampling the timer {} for signaltype {}",
+            this.onComplete.getId().getName(),
+            signalType);
       }
       switch (signalType) {
         case CANCEL:
